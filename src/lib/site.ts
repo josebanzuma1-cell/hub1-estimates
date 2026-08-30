@@ -3,7 +3,7 @@
    templates stay hub-agnostic. */
 
 export const SITE = {
-  name: 'Exact Figure',
+  name: 'Estimates',
   tagline: 'Mortgage and real estate calculators that show their work',
   description:
     'Free mortgage calculators with real amortization schedules, extra-payment ' +
