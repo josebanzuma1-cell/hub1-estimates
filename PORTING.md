@@ -1,4 +1,4 @@
-# Porting this build to Hub 2
+| `--c-accent*`, `--c-deep*`, `--c-pop*` in `tokens.css` | The palette. `--c-deep` is the hero/header band, `--c-pop` the CTA that has to pop against it.# Porting this build to Hub 2
 
 Each hub is its own workspace and its own repo. The reusable half is
 `src/kit/` — copy that one folder and you inherit the design system, the
@@ -126,7 +126,7 @@ itself, or CLS goes with it.
 Three band treatments, so every page reads as part of one system:
 
 - **Homepage** — `.band`, a full-bleed `--c-deep` hero with a centred headline
-  (wrap the emphasised word in `<em>` for the lime highlight), the `.picker`
+  (wrap the emphasised word in `<em>` for the --c-pop highlight), the `.picker`
   selector + CTA, then `.trust` and `.tiles`.
 - **Tool pages** — `.tool-band`, a soft mint gradient behind the breadcrumbs and
   h1 only. The calculator stays on plain ground: a results card has to read as

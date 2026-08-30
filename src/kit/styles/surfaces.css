@@ -12,17 +12,17 @@
 .site-header--deep .brand:hover { color: #fff; }
 .site-header--deep .nav a { color: var(--c-on-deep-dim); }
 .site-header--deep .nav a:hover,
-.site-header--deep .nav a[aria-current='page'] { color: var(--c-lime); }
+.site-header--deep .nav a[aria-current='page'] { color: var(--c-pop); }
 .site-header--deep .site-header__inner { min-height: 66px; }
 
 .header-cta {
   display: none; align-items: center; gap: var(--s-2);
-  background: var(--c-lime); color: var(--c-lime-ink);
+  background: var(--c-pop); color: var(--c-pop-ink);
   font-size: var(--t-sm); font-weight: 640; text-decoration: none;
   padding: 0 var(--s-4); height: 38px; border-radius: var(--r-full);
   transition: background .12s ease;
 }
-.header-cta:hover { background: var(--c-lime-2); color: var(--c-lime-ink); }
+.header-cta:hover { background: var(--c-pop-2); color: var(--c-pop-ink); }
 @media (min-width: 900px) { .header-cta { display: inline-flex; } }
 
 /* ---------- hero band ---------- */
@@ -50,7 +50,7 @@
   font-size: clamp(2.1rem, 5.2vw, 3.6rem);
   letter-spacing: -0.035em; line-height: 1.06; color: #fff;
 }
-.band h1 em { font-style: normal; color: var(--c-lime); }
+.band h1 em { font-style: normal; color: var(--c-pop); }
 .band__sub {
   margin-top: var(--s-4); font-size: var(--t-md);
   color: var(--c-on-deep-dim); max-width: 40rem; margin-inline: auto;
@@ -79,22 +79,22 @@
   background-repeat: no-repeat; background-position: right 4px center; background-size: 12px 8px;
 }
 .picker__field select:focus { outline: none; }
-.picker__field:focus-within { box-shadow: 0 0 0 3px var(--c-lime), var(--shadow-lift); }
+.picker__field:focus-within { box-shadow: 0 0 0 3px var(--c-pop), var(--shadow-lift); }
 
 .picker__go {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--s-2);
-  background: var(--c-lime); color: var(--c-lime-ink);
+  background: var(--c-pop); color: var(--c-pop-ink);
   border: 0; border-radius: var(--r-full); height: 60px; padding-inline: var(--s-6);
   font: inherit; font-size: var(--t-md); font-weight: 660; letter-spacing: -0.01em;
   cursor: pointer; white-space: nowrap; transition: background .12s ease, transform .1s ease;
 }
-.picker__go:hover { background: var(--c-lime-2); }
+.picker__go:hover { background: var(--c-pop-2); }
 .picker__go:active { transform: translateY(1px); }
 
 .band__note {
   margin-top: var(--s-4); font-size: var(--t-sm); color: var(--c-on-deep-dim);
 }
-.band__note a { color: var(--c-lime); text-decoration-color: rgba(182,242,77,.4); }
+.band__note a { color: var(--c-pop); text-decoration-color: rgba(182,242,77,.4); }
 
 /* ---------- trust strip ----------
    Verifiable properties of the product only. No ratings, no review counts,
@@ -177,7 +177,7 @@
 }
 .site-footer--deep h4 { color: #fff; }
 .site-footer--deep a { color: var(--c-on-deep-dim); }
-.site-footer--deep a:hover { color: var(--c-lime); }
+.site-footer--deep a:hover { color: var(--c-pop); }
 .site-footer--deep .footer-legal { border-top-color: var(--c-deep-line) !important; }
 
 /* The mark fills from --c-accent, which is the same family as the dark

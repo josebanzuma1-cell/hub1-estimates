@@ -74,9 +74,9 @@
   --c-on-deep:     #eaf3ef;   /* body text on the band */
   --c-on-deep-dim: #9dbcb0;   /* secondary text on the band */
 
-  --c-lime:        #b6f24d;   /* primary CTA + highlighted words */
-  --c-lime-2:      #c8f97a;   /* CTA hover */
-  --c-lime-ink:    #08301f;   /* text on lime */
+  --c-pop:        #b6f24d;   /* primary CTA + highlighted words */
+  --c-pop-2:      #c8f97a;   /* CTA hover */
+  --c-pop-ink:    #08301f;   /* text on lime */
 
   --c-mint:        #e4f5ec;   /* soft tile backgrounds */
   --c-sand:        #fdf3e0;   /* alternating tile backgrounds */
