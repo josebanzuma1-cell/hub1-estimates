@@ -1,0 +1,173 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AffordabilityTool from '../../components/AffordabilityTool.astro';
+import RelatedTools from '@kit/components/RelatedTools.astro';
+import { SITE, toolsExcept } from '../../lib/site';
+import { METROS } from '@data/metros';
+import { stateByCode } from '@data/states';
+import type { MetroData } from '@data/types';
+
+export function getStaticPaths() {
+  return METROS.map((metro) => ({ params: { metro: metro.slug }, props: { metro } }));
+}
+
+interface Props { metro: MetroData }
+const { metro } = Astro.props;
+const state = stateByCode(metro.stateCode);
+const canonical = `/affordability/${metro.slug}`;
+const title = `How Much House Can You Afford in ${metro.name}? | ${SITE.name}`;
+const description =
+  `Home affordability for ${metro.name}, using the local ${metro.propertyTaxPct}% ` +
+  `property tax rate and a median price of $${metro.medianPrice.toLocaleString()}.`;
+
+// Price-to-income is the comparison that actually separates metros.
+const ptiRatio = metro.medianPrice / metro.medianIncome;
+const priceToRent = metro.medianPrice / (metro.medianRent * 12);
+const national = 4.1;
+const stretched = ptiRatio > 5;
+const affordable = ptiRatio < 3.5;
+
+const peers = METROS
+  .filter((m) => m.slug !== metro.slug)
+  .map((m) => ({ m, d: Math.abs(m.medianPrice / m.medianIncome - ptiRatio) }))
+  .sort((a, b) => a.d - b.d)
+  .slice(0, 6)
+  .map((x) => x.m);
+
+const related = toolsExcept('home-affordability-calculator').slice(0, 3).map((t) => ({
+  href: `/tools/${t.slug}`, title: t.title, desc: t.blurb,
+}));
+
+const schema = [{
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE.url },
+    { '@type': 'ListItem', position: 2, name: 'Affordability by city', item: `${SITE.url}/affordability` },
+    { '@type': 'ListItem', position: 3, name: metro.name, item: `${SITE.url}${canonical}` },
+  ],
+}];
+---
+<BaseLayout {title} {description} {canonical} {schema}>
+  <AffordabilityTool
+    metro={metro}
+    title={`How Much House Can You Afford in ${metro.name}?`}
+    intro={`Pre-loaded with ${metro.name}'s ${metro.propertyTaxPct}% effective property tax rate and typical insurance premium. Replace the median income with your own — that is the input that matters.`}
+    breadcrumbs={[
+      { href: '/', label: 'Home' },
+      { href: '/affordability', label: 'Affordability by city' },
+      { label: metro.name },
+    ]}
+  >
+    <section style="margin-top:var(--s-7)">
+      <div class="section-head"><h2>{metro.name} housing market</h2></div>
+      <div class="table-wrap">
+        <table class="data">
+          <tbody>
+            <tr><td>Median home price</td><td>${metro.medianPrice.toLocaleString()}</td></tr>
+            <tr><td>Median household income</td><td>${metro.medianIncome.toLocaleString()}</td></tr>
+            <tr><td>Price-to-income ratio</td><td>{ptiRatio.toFixed(1)}x</td></tr>
+            <tr><td>Median rent</td><td>${metro.medianRent.toLocaleString()} / month</td></tr>
+            <tr><td>Price-to-rent ratio</td><td>{priceToRent.toFixed(1)}x</td></tr>
+            <tr><td>Effective property tax</td><td>{metro.propertyTaxPct}% of value per year</td></tr>
+            <tr><td>Typical home insurance</td><td>${metro.insuranceAnnual.toLocaleString()} per year</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="prose" style="margin-top:var(--s-7)">
+      <h2>What the ratios say about {metro.name}</h2>
+      <p>
+        The median home in {metro.name} costs {ptiRatio.toFixed(1)} times the median
+        household income. Nationally that figure sits around {national}, and the
+        long-standing rule of thumb — that a house should cost about three times
+        income — dates from an era of very different interest rates.
+        {stretched
+          ? ` At ${ptiRatio.toFixed(1)}x, ${metro.name} is meaningfully stretched. A median earner cannot buy a median home here on conventional ratios without either an unusually large down payment or a second income.`
+          : affordable
+            ? ` At ${ptiRatio.toFixed(1)}x, ${metro.name} is comparatively affordable — a median earner can reach a median home on standard underwriting.`
+            : ` At ${ptiRatio.toFixed(1)}x, ${metro.name} sits close to the national picture: reachable for a median earner, but without much slack.`}
+      </p>
+      <p>
+        The price-to-rent ratio of {priceToRent.toFixed(1)} is the other half of the
+        picture. It is the median price divided by a year of median rent, and it is
+        the cleanest single indicator of whether buying or renting is the better
+        financial move in a given market.
+        {priceToRent > 20
+          ? ` Above 20 is expensive to buy relative to renting — the numbers here favour renting and investing the difference unless you plan to stay a long time.`
+          : priceToRent < 15
+            ? ` Below 15 is cheap to buy relative to renting, which generally favours buying even over fairly short horizons.`
+            : ` The 15-to-20 range is the ambiguous middle, where how long you stay matters more than the market does.`}
+        Run your own numbers in the
+        <a href="/tools/rent-vs-buy-calculator"> rent vs buy calculator</a>.
+      </p>
+
+      <h2>Property tax in {metro.name}</h2>
+      <p>
+        The effective rate here is {metro.propertyTaxPct}% of market value per year —
+        about ${Math.round(metro.medianPrice * (metro.propertyTaxPct / 100)).toLocaleString()}
+        annually on the median home, or
+        ${Math.round((metro.medianPrice * (metro.propertyTaxPct / 100)) / 12).toLocaleString()}
+        a month added to the payment before insurance.
+        {metro.propertyTaxPct > 1.5
+          ? ' That is a high rate by national standards, and it does real damage to purchasing power — it is worth roughly a full point of mortgage rate.'
+          : metro.propertyTaxPct < 0.7
+            ? ' That is a low rate by national standards, which quietly buys back a meaningful amount of purchasing power.'
+            : ' That is close to the national middle.'}
+      </p>
+      <p>
+        Two things to check before relying on it. Assessed value is not always market
+        value — some states cap annual increases, which means a long-time owner's tax
+        bill can be far below what a new buyer will pay on the same house. And a
+        recent sale often triggers reassessment, so the seller's current bill is a
+        poor guide to yours.
+      </p>
+
+      <h2>Insurance in {metro.name}</h2>
+      <p>
+        Typical premiums here run about ${metro.insuranceAnnual.toLocaleString()} a
+        year.
+        {metro.insuranceAnnual > 3500
+          ? ' That is well above the national median, and in markets like this insurance has been the fastest-rising line in the monthly payment. Get a real quote on a specific address before making an offer — premiums vary enormously street to street with flood zone, roof age and construction type, and a surprise here can undo a rate negotiation.'
+          : ' Get a quote on the specific address rather than relying on a metro average — roof age, construction type and flood zone move premiums more than location alone does.'}
+      </p>
+
+      {state && (
+        <>
+          <h2>Closing costs in {state.name}</h2>
+          <p>
+            {state.transferTaxPct === null
+              ? `${state.name} charges no state transfer tax, so the government share of your closing costs is limited to recording fees of around $${state.recordingFee}.`
+              : `${state.name} charges a ${state.transferTaxPct}% transfer tax, ${state.transferTaxPaidBy === 'buyer' ? 'customarily paid by the buyer' : state.transferTaxPaidBy === 'negotiable' ? 'customarily split between the parties' : 'customarily paid by the seller'}. On the ${metro.name} median price that is about $${Math.round(metro.medianPrice * (state.transferTaxPct / 100)).toLocaleString()}.`}
+            {' '}See the full breakdown for
+            <a href={`/closing-costs/${state.slug}`}> {state.name} closing costs</a>.
+          </p>
+        </>
+      )}
+    </section>
+
+    <section style="margin-top:var(--s-7)">
+      <div class="section-head">
+        <h2>Metros with similar affordability</h2>
+        <p>Closest price-to-income ratios to {metro.name}.</p>
+      </div>
+      <div class="cards">
+        {peers.map((p) => (
+          <a class="card" href={`/affordability/${p.slug}`}>
+            <span class="card__title">{p.name}, {p.stateCode}</span>
+            <span class="card__desc">
+              {(p.medianPrice / p.medianIncome).toFixed(1)}x income · median ${p.medianPrice.toLocaleString()}
+            </span>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <RelatedTools items={related} />
+  </AffordabilityTool>
+</BaseLayout>
+
+<script>
+  import '../../scripts/af-island';
+</script>

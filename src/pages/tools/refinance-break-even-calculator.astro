@@ -1,0 +1,322 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ToolShell from '@kit/components/ToolShell.astro';
+import Field from '@kit/components/Field.astro';
+import Segmented from '@kit/components/Segmented.astro';
+import Chart from '@kit/components/Chart.astro';
+import AdSlot from '@kit/components/AdSlot.astro';
+import RelatedTools from '@kit/components/RelatedTools.astro';
+import { SITE, toolBySlug, toolsExcept } from '../../lib/site';
+import { D } from '../../lib/tools/refinance';
+
+const tool = toolBySlug('refinance-break-even-calculator')!;
+const canonical = `/tools/${tool.slug}`;
+const title = `Refinance Break-Even Calculator | ${SITE.name}`;
+const description =
+  'Work out how many months it takes for a lower rate to repay your closing ' +
+  'costs — including the equity you lose by restarting the loan term.';
+
+const schema = [{
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE.url },
+    { '@type': 'ListItem', position: 2, name: 'Calculators', item: `${SITE.url}/tools` },
+    { '@type': 'ListItem', position: 3, name: tool.nav, item: `${SITE.url}${canonical}` },
+  ],
+}];
+
+const related = toolsExcept(tool.slug).slice(0, 3).map((t) => ({
+  href: `/tools/${t.slug}`, title: t.title, desc: t.blurb,
+}));
+---
+<BaseLayout {title} {description} {canonical} {schema}>
+  <ToolShell
+    title="Refinance Break-Even Calculator"
+    intro="A lower rate is not automatically a saving. This works out the month your closing costs are repaid — and separately, the month you are genuinely ahead once the reset loan term is accounted for."
+    breadcrumbs={[{ href: '/', label: 'Home' }, { href: '/tools', label: 'Calculators' }, { label: tool.nav }]}
+    adSlotTop="refi-top"
+    adSlotResults="refi-results"
+    calcId="refi"
+  >
+    <form slot="controls" id="refi-form">
+      <div class="fieldset">
+        <legend>Loan you have now</legend>
+        <Field name="bal" label="Remaining balance" affix="currency" value={D.bal}
+               min={1000} max={10000000} step={1000}
+               slider sliderMin={25000} sliderMax={1500000} sliderStep={5000} />
+        <div class="field-grid field-grid--2">
+          <Field name="crate" label="Current rate" affix="percent" value={D.crate} min={0} max={25} step={0.125} />
+          <Field name="cleft" label="Months remaining" value={D.cleft} hint="of the original term" min={1} max={600} step={1} />
+        </div>
+      </div>
+
+      <div class="fieldset">
+        <legend>Loan you are offered</legend>
+        <Field name="nrate" label="New rate" affix="percent" value={D.nrate}
+               min={0} max={25} step={0.125}
+               slider sliderMin={2} sliderMax={10} sliderStep={0.125} />
+        <Segmented name="nterm" label="New term" value={D.nterm}
+                   options={[{ value: 180, label: '15 yr' }, { value: 240, label: '20 yr' }, { value: 360, label: '30 yr' }]} />
+        <Field name="costs" label="Closing costs" affix="currency" value={D.costs}
+               hint="lender + title + prepaids" min={0} max={200000} step={250}
+               slider sliderMin={0} sliderMax={30000} sliderStep={250} />
+        <Segmented name="roll" label="How are costs paid?" value={D.roll ? '1' : '0'}
+                   options={[{ value: '0', label: 'Cash at closing' }, { value: '1', label: 'Rolled into loan' }]} />
+      </div>
+
+      <div class="fieldset">
+        <legend>Your plans</legend>
+        <Field name="stay" label="Years you expect to keep the house" value={D.stay}
+               hint="median US tenure is about 12" min={1} max={40} step={1}
+               slider sliderMin={1} sliderMax={30} sliderStep={1} />
+      </div>
+    </form>
+
+    <div slot="results" class="results">
+      <div class="results__headline">
+        <div class="results__headline-label">True break-even</div>
+        <div class="results__headline-value num" data-out="trueBreakEven" data-fmt="months">—</div>
+        <div class="results__headline-sub">
+          The month you are genuinely ahead on cash paid plus debt still owed.
+        </div>
+      </div>
+
+      <div class="results__grid">
+        <div class="stat">
+          <div class="stat__label">New monthly payment</div>
+          <div class="stat__value num" data-out="newPayment" data-fmt="currency2">—</div>
+          <div class="stat__note">was <span data-out="currentPayment" data-fmt="currency2">—</span></div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Monthly saving</div>
+          <div class="stat__value num" data-out="monthlySaving" data-fmt="currency2" data-sign>—</div>
+          <div class="stat__note">cash flow only</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Simple break-even</div>
+          <div class="stat__value num" data-out="simpleBreakEven" data-fmt="months">—</div>
+          <div class="stat__note">costs ÷ monthly saving</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Net position after your stay</div>
+          <div class="stat__value num" data-out="savingOverStay" data-fmt="currency" data-sign>—</div>
+          <div class="stat__note">vs keeping the current loan</div>
+        </div>
+      </div>
+
+      <div class="results__chart">
+        <Chart id="chart-refi" height={210} label="Refinancing minus keeping — above the line is ahead"
+               caption="Includes cash brought to closing and the balance still owed at each point." />
+      </div>
+
+      <div class="results__actions">
+        <button type="button" class="btn btn--primary" data-action="share">Copy shareable link</button>
+        <button type="button" class="btn" data-action="reset">Reset</button>
+      </div>
+    </div>
+
+    <div id="refi-verdict" style="margin-top:var(--s-5)"></div>
+
+    <AdSlot unit="refi-mid" variant="inline" />
+
+    <section class="prose" style="margin-top:var(--s-7)">
+      <h2>Why there are two break-even numbers</h2>
+      <p>
+        Almost every refinance calculator online gives you one number: closing
+        costs divided by the monthly saving. Spend $7,000 to save $250 a month and
+        it reports 28 months. That figure is easy to compute, easy to explain, and
+        misleading in the most common refinance there is.
+      </p>
+      <p>
+        The problem is the term. If you have 26 years left and you refinance into a
+        fresh 30-year loan, part of your "saving" is not a saving at all — it is
+        four extra years of payments moved out of view. The payment drops partly
+        because the rate fell and partly because you spread the same debt over a
+        longer period. Simple break-even counts both as a win.
+      </p>
+      <div class="callout">
+        <strong>The honest test is net position.</strong> At any month, add up
+        everything you have paid out and everything you still owe. Whichever loan
+        leaves that total lower is the one that is actually ahead. That is the
+        number in the headline above, and it is usually several months later than
+        the simple figure — sometimes years later, and occasionally never.
+      </div>
+
+      <h2>What counts as closing costs</h2>
+      <p>
+        A refinance is a new loan, so it carries most of the costs of the original
+        one. Expect these:
+      </p>
+      <ul>
+        <li><strong>Lender fees</strong> — origination, underwriting, application. Often 0.5% to 1% of the loan.</li>
+        <li><strong>Third-party fees</strong> — appraisal ($400–$800), credit report, flood certification, recording.</li>
+        <li><strong>Title</strong> — a new lender's title policy is required even though you already bought one. A reissue rate is often available for a refinance if you ask; it can cut this line substantially.</li>
+        <li><strong>Prepaid items</strong> — interest to the end of the month, plus a fresh escrow deposit for taxes and insurance.</li>
+        <li><strong>Points</strong> — optional prepaid interest to buy the rate down.</li>
+      </ul>
+      <p>
+        The escrow deposit is the one people misclassify. It is not a fee — your old
+        escrow account gets refunded within about 30 days. It is a cash flow event,
+        not a cost. If you are counting carefully, exclude it from the closing cost
+        field and treat the refund as offsetting the deposit.
+      </p>
+
+      <h3>"No-cost" refinances</h3>
+      <p>
+        There is no such thing as a refinance without costs. A no-cost refinance
+        pays the fees through a lender credit, funded by a higher rate — typically
+        0.25 to 0.5 points above par. Break-even becomes instant because you brought
+        no cash, but you pay for it every month for as long as you keep the loan.
+      </p>
+      <p>
+        The rule of thumb that follows: if you are confident you will keep the loan
+        a long time, pay costs in cash and take the lower rate. If you might
+        refinance or sell within a few years, take the credit. Model both here — set
+        closing costs to zero and raise the new rate to see the trade directly.
+      </p>
+
+      <h2>Rolling costs into the loan</h2>
+      <p>
+        Rolling costs in means you bring no cash but borrow more. Break-even by the
+        simple measure looks instant, which is why lenders like presenting it that
+        way. In net-position terms nothing was free: your balance went up by the
+        full amount and you now pay interest on it for the life of the loan. On a
+        $7,000 roll-in at 5.875% over 30 years, that is roughly $7,900 of additional
+        interest on top of the $7,000.
+      </p>
+
+      <h2>When refinancing is the wrong move</h2>
+      <ul>
+        <li>
+          <strong>You are moving soon.</strong> If the true break-even lands past
+          your expected tenure, you pay the costs and leave before recovering them.
+          This is the single most common refinance mistake.
+        </li>
+        <li>
+          <strong>You are deep into the loan.</strong> Twenty-two years into a
+          30-year mortgage, most of your payment is already principal. Resetting to
+          a new 30-year term re-front-loads interest you had finished paying, and
+          the lower rate rarely makes that back.
+        </li>
+        <li>
+          <strong>The rate improvement is thin.</strong> The old "refinance at 1%
+          better" rule is crude but directionally right. Below roughly half a point,
+          costs usually swallow the gain unless the balance is large.
+        </li>
+        <li>
+          <strong>You would drop below 20% equity.</strong> Rolling costs in can
+          push the loan-to-value past 80% and trigger PMI, which can exceed the
+          entire monthly saving.
+        </li>
+      </ul>
+
+      <h2>Cases where it works even with a worse headline</h2>
+      <p>
+        Break-even is not the only reason to refinance. Removing a co-borrower after
+        a divorce, converting an adjustable-rate loan to fixed before it adjusts, or
+        dropping mortgage insurance after the property appreciated can all justify a
+        refinance that never breaks even on rate alone. FHA loans are the clearest
+        case: mortgage insurance on most FHA loans runs for the life of the loan, so
+        refinancing to a conventional loan at the same rate can still save real money
+        every month by eliminating the premium.
+      </p>
+      <p>
+        Shortening the term is the mirror image. Moving from a 30-year to a 15-year
+        raises the payment and still saves an enormous amount of interest. Simple
+        break-even reports a negative monthly saving and looks like a failure; net
+        position shows it clearly. Set the new term to 15 years above and watch the
+        two numbers disagree.
+      </p>
+
+      <h2>Common questions</h2>
+      <dl class="faq">
+        <dt>How soon after buying can I refinance?</dt>
+        <dd>
+          Usually any time, though some lenders apply a six-month seasoning
+          requirement and a few charge an early-payoff penalty to the original
+          lender within the first year. Cash-out refinances typically require
+          12 months of ownership.
+        </dd>
+        <dt>Does refinancing hurt my credit?</dt>
+        <dd>
+          A little and briefly. The hard inquiry and the new account cost a few
+          points for several months. Rate shopping within a 45-day window counts as
+          a single inquiry, so gather quotes close together.
+        </dd>
+        <dt>Should I include property tax and insurance?</dt>
+        <dd>
+          No. Escrow items do not change when you refinance — the same house owes
+          the same taxes. Comparing principal and interest only is the correct
+          comparison, and that is what this calculator does.
+        </dd>
+        <dt>What if I plan to make extra payments?</dt>
+        <dd>
+          Extra payments shift break-even earlier, because a lower rate makes each
+          extra dollar retire more debt. Model the payoff itself in the
+          <a href="/tools/amortization-calculator">amortization calculator</a>,
+          which handles extra principal directly.
+        </dd>
+      </dl>
+    </section>
+
+    <RelatedTools items={related} />
+  </ToolShell>
+</BaseLayout>
+
+<script>
+  import { mount } from '@kit/calc/engine';
+  import { lineChart } from '@kit/calc/chart';
+  import { currencyCompact, currency, months as fmtMonths } from '@kit/calc/format';
+  import { FIELDS, compute } from '../../lib/tools/refinance';
+  import type { RefiModel } from '../../lib/tools/refinance';
+
+  document.getElementById('refi-form')?.addEventListener('submit', (e) => e.preventDefault());
+
+  mount<RefiModel>({
+    id: 'refi',
+    fields: FIELDS,
+    compute,
+    debounceMs: 90,
+    onRender(m) {
+      const el = document.getElementById('chart-refi');
+      if (el) {
+        lineChart(el, {
+          series: [{ name: 'Refinancing minus keeping', color: 'var(--c-series-1)', points: m.positionDelta, fill: true }],
+          yFormat: currencyCompact,
+          xFormat: (i) => `Year ${(i * 3 / 12).toFixed(1)}`,
+          xTicks: refiTicks(m.positionDelta.length),
+          zeroBaseline: true,
+          crosshair: true,
+          height: 210,
+        });
+      }
+
+      const verdict = document.getElementById('refi-verdict');
+      if (!verdict) return;
+      const stayYears = Math.round(m.stayMonths / 12);
+      if (!Number.isFinite(m.trueBreakEven)) {
+        verdict.innerHTML = note('warn', 'This refinance never breaks even',
+          `At these terms the new loan leaves you worse off at every point we model — the rate improvement never covers the closing costs and the change in term.`);
+      } else if (m.worthIt) {
+        verdict.innerHTML = note('ok', `Ahead after ${fmtMonths(m.trueBreakEven)}`,
+          `You expect to stay ${stayYears} years, which is past the break-even point. Over that period refinancing leaves you roughly ${currency(Math.abs(m.savingOverStay))} better off.` +
+          (m.resetsClock ? ' Note that the new term is longer than what you have left, so part of the monthly saving is deferral rather than saving — the figure above already accounts for that.' : ''));
+      } else {
+        verdict.innerHTML = note('warn', `Break-even lands after you plan to leave`,
+          `True break-even is ${fmtMonths(m.trueBreakEven)}, but you expect to stay ${stayYears} years. On these numbers you would pay the costs and move before recovering them — about ${currency(Math.abs(m.savingOverStay))} behind.`);
+      }
+    },
+  });
+
+  function note(kind: 'ok' | 'warn', title: string, body: string) {
+    return `<div class="note${kind === 'warn' ? ' note--warn' : ''}"><strong class="note__title">${title}</strong><p>${body}</p></div>`;
+  }
+
+  function refiTicks(n: number) {
+    const step = Math.max(1, Math.round(n / 8));
+    const out: Array<{ at: number; label: string }> = [];
+    for (let i = 0; i < n; i += step) out.push({ at: i, label: i === 0 ? 'Now' : `Y${Math.round(i * 3 / 12)}` });
+    return out;
+  }
+</script>

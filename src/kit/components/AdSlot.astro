@@ -1,0 +1,36 @@
+---
+/* KIT — ad slot with height reserved in CSS.
+   Nothing about the served ad determines this element's size. The container
+   is fixed by --ad-h-* before any script runs, so the ad cannot move layout.
+   That is the whole point: CLS costs rankings, and rankings cost more than
+   the unit earns.
+
+   Placement (per hub): one above the calculator, one directly under the
+   results card — highest CTR on a tool page, since that is where attention
+   lands — and one mid-content. Everything below the fold lazy-loads.
+
+   Set PUBLIC_ADSENSE_CLIENT in .env to activate. Until then this renders a
+   labelled placeholder so layout is identical before and after approval. */
+interface Props {
+  unit: string;
+  variant?: 'leaderboard' | 'inline' | 'sidebar';
+  lazy?: boolean;
+}
+const { unit, variant = "inline", lazy = true } = Astro.props;
+const client = import.meta.env.PUBLIC_ADSENSE_CLIENT;
+---
+<aside class={`ad ad--${variant}`} data-ad-slot={unit} aria-label="Advertisement">
+  {client ? (
+    <ins
+      class="adsbygoogle"
+      style="display:block;width:100%;height:100%"
+      data-ad-client={client}
+      data-ad-slot={unit}
+      data-ad-format="auto"
+      data-full-width-responsive="true"
+      data-loading-strategy={lazy ? 'prefer-viewport' : undefined}
+    />
+  ) : (
+    <div class="ad__inner">Ad slot · {unit} · {variant}</div>
+  )}
+</aside>

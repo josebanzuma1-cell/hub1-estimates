@@ -1,0 +1,29 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AdSlot from '@kit/components/AdSlot.astro';
+import { SITE, TOOLS } from '../../lib/site';
+
+const title = `All Calculators | ${SITE.name}`;
+const description = 'Every mortgage, refinance, affordability and rental calculator on the site.';
+const canonical = '/tools';
+---
+<BaseLayout {title} {description} {canonical}>
+  <div class="page">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span aria-hidden="true">/</span><span aria-current="page">Calculators</span>
+    </nav>
+    <div class="tool-hero">
+      <h1>All calculators</h1>
+      <p>Seven tools covering the purchase, the refinance and the rental deal.</p>
+    </div>
+    <AdSlot unit="tools-top" variant="leaderboard" lazy={false} />
+    <div class="cards" style="margin-top:var(--s-6)">
+      {TOOLS.map((t) => (
+        <a class="card" href={`/tools/${t.slug}`}>
+          <span class="card__title">{t.title}</span>
+          <span class="card__desc">{t.blurb}</span>
+        </a>
+      ))}
+    </div>
+  </div>
+</BaseLayout>

@@ -1,0 +1,115 @@
+---
+/* Shared by /tools/home-affordability-calculator and /affordability/[metro]. */
+import ToolShell from '@kit/components/ToolShell.astro';
+import Field from '@kit/components/Field.astro';
+import Chart from '@kit/components/Chart.astro';
+import AdSlot from '@kit/components/AdSlot.astro';
+import DataNote from '@kit/components/DataNote.astro';
+import { D } from '../lib/tools/affordability';
+import type { MetroData } from '@data/types';
+
+interface Props {
+  metro?: MetroData | null;
+  title: string;
+  intro: string;
+  breadcrumbs: Array<{ href?: string; label: string }>;
+}
+const { metro = null, title, intro, breadcrumbs } = Astro.props;
+const income = metro ? Math.round(metro.medianIncome) : (D.inc as number);
+const tax = metro ? metro.propertyTaxPct : (D.tax as number);
+const ins = metro ? metro.insuranceAnnual : (D.ins as number);
+---
+<ToolShell {title} {intro} {breadcrumbs} adSlotTop="af-top" adSlotResults="af-results" calcId="af">
+  <form slot="controls" id="af-form">
+    <div class="fieldset">
+      <legend>Your finances</legend>
+      <Field name="inc" label="Household income" affix="currency" value={income} hint="before tax, per year"
+             min={0} max={10000000} step={1000}
+             slider sliderMin={30000} sliderMax={500000} sliderStep={1000} />
+      <Field name="debts" label="Other monthly debt payments" affix="currency" value={D.debts}
+             hint="car, student, card minimums" min={0} max={100000} step={25}
+             slider sliderMin={0} sliderMax={5000} sliderStep={25} />
+      <Field name="down" label="Cash for down payment" affix="currency" value={D.down}
+             min={0} max={10000000} step={1000}
+             slider sliderMin={0} sliderMax={500000} sliderStep={1000} />
+    </div>
+
+    <div class="fieldset">
+      <legend>Loan and local costs</legend>
+      <div class="field-grid field-grid--2">
+        <Field name="rate" label="Interest rate" affix="percent" value={D.rate} min={0} max={25} step={0.125} />
+        <Field name="term" label="Term (years)" value={D.term} min={1} max={50} step={5} />
+      </div>
+      <div class="field-grid field-grid--2">
+        <Field name="tax" label="Property tax" affix="percent" value={tax} hint="of value / yr" min={0} max={10} step={0.05} />
+        <Field name="ins" label="Home insurance" affix="currency" value={ins} hint="per year" min={0} max={100000} step={100} />
+      </div>
+      <Field name="hoa" label="HOA dues" affix="currency" value={D.hoa} hint="per month" min={0} max={5000} step={25} />
+    </div>
+
+    <div class="fieldset">
+      <legend>Underwriting limits</legend>
+      <div class="field-grid field-grid--2">
+        <Field name="front" label="Front-end DTI" affix="percent" value={D.front} hint="housing only" min={5} max={60} step={1} />
+        <Field name="back" label="Back-end DTI" affix="percent" value={D.back} hint="all debt" min={5} max={70} step={1} />
+      </div>
+    </div>
+  </form>
+
+  <div slot="results" class="results">
+    <div class="results__headline">
+      <div class="results__headline-label">Home price you can carry</div>
+      <div class="results__headline-value num" data-out="maxPrice" data-fmt="currency">—</div>
+      <div class="results__headline-sub" id="af-sub">
+        Borrowing <span data-out="maxLoan" data-fmt="currency">—</span> at a
+        <span data-out="downPct" data-fmt="percent0">—</span> down payment.
+      </div>
+    </div>
+    <div class="results__grid results__grid--3">
+      <div class="stat">
+        <div class="stat__label">Principal &amp; interest</div>
+        <div class="stat__value num" data-out="principalInterest" data-fmt="currency">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat__label">Property tax</div>
+        <div class="stat__value num" data-out="monthlyTax" data-fmt="currency">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat__label">Insurance</div>
+        <div class="stat__value num" data-out="monthlyIns" data-fmt="currency">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat__label">PMI</div>
+        <div class="stat__value num" data-out="monthlyPmi" data-fmt="currency">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat__label">HOA</div>
+        <div class="stat__value num" data-out="hoa" data-fmt="currency">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat__label">Total monthly</div>
+        <div class="stat__value num" data-out="totalPiti" data-fmt="currency">—</div>
+      </div>
+    </div>
+    <div class="results__chart">
+      <Chart id="chart-af" height={200} label="Where the monthly payment goes"
+             caption="Principal and interest is only part of what you commit to." />
+    </div>
+    <div class="results__actions">
+      <button type="button" class="btn btn--primary" data-action="share">Copy shareable link</button>
+      <button type="button" class="btn" data-action="reset">Reset</button>
+    </div>
+  </div>
+
+  <div id="af-verdict" style="margin-top:var(--s-5)"></div>
+
+  {metro && (
+    <div style="margin-top:var(--s-5)">
+      <DataNote source={metro.source} verified={metro.verified}
+                note={`Median price and income for ${metro.name}. Your own figures matter more than the median — change them above.`} />
+    </div>
+  )}
+
+  <AdSlot unit="af-mid" variant="inline" />
+  <slot />
+</ToolShell>

@@ -1,0 +1,156 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AffordabilityTool from '../../components/AffordabilityTool.astro';
+import RelatedTools from '@kit/components/RelatedTools.astro';
+import { SITE, toolBySlug, toolsExcept } from '../../lib/site';
+import { METROS } from '@data/metros';
+
+const tool = toolBySlug('home-affordability-calculator')!;
+const canonical = `/tools/${tool.slug}`;
+const title = `Home Affordability Calculator — How Much House Can I Afford | ${SITE.name}`;
+const description =
+  'Work out the home price your income actually supports, using both DTI ' +
+  'limits lenders apply, plus local property tax, insurance and PMI.';
+
+const schema = [{
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE.url },
+    { '@type': 'ListItem', position: 2, name: 'Calculators', item: `${SITE.url}/tools` },
+    { '@type': 'ListItem', position: 3, name: tool.nav, item: `${SITE.url}${canonical}` },
+  ],
+}];
+
+const related = toolsExcept(tool.slug).slice(0, 3).map((t) => ({
+  href: `/tools/${t.slug}`, title: t.title, desc: t.blurb,
+}));
+---
+<BaseLayout {title} {description} {canonical} {schema}>
+  <AffordabilityTool
+    metro={null}
+    title="Home Affordability Calculator"
+    intro="Lenders apply two debt-to-income limits, and the lower one decides your answer. This solves for the price that fits both — with property tax, insurance and PMI included, not bolted on afterwards."
+    breadcrumbs={[{ href: '/', label: 'Home' }, { href: '/tools', label: 'Calculators' }, { label: tool.nav }]}
+  >
+    <section style="margin-top:var(--s-7)">
+      <div class="section-head">
+        <h2>Affordability by city</h2>
+        <p>Property tax rates and insurance premiums vary more between metros than mortgage rates vary between lenders. Start from local figures.</p>
+      </div>
+      <div class="chip-row">
+        {METROS.map((m) => <a class="chip" href={`/affordability/${m.slug}`}>{m.name}, {m.stateCode}</a>)}
+      </div>
+    </section>
+
+    <section class="prose" style="margin-top:var(--s-7)">
+      <h2>The two ratios that decide it</h2>
+      <p>
+        Underwriting comes down to two debt-to-income ratios, and the answer is
+        whichever one runs out first.
+      </p>
+      <ul>
+        <li>
+          <strong>Front-end DTI</strong> is housing alone as a share of gross monthly
+          income — principal, interest, taxes, insurance, PMI and HOA. The
+          conventional guideline is 28%.
+        </li>
+        <li>
+          <strong>Back-end DTI</strong> is all recurring debt, housing included: car
+          payments, student loans, minimum card payments, child support. The common
+          ceiling is 43%, which is also the threshold for a Qualified Mortgage.
+          Fannie Mae will go to 50% with compensating factors.
+        </li>
+      </ul>
+      <p>
+        Knowing which one binds tells you what to do next. If the front-end ratio is
+        the constraint, more income or a bigger down payment is the only lever. If
+        the back-end ratio binds, clearing a monthly obligation raises your price
+        immediately and often by more than saving the same amount would.
+      </p>
+      <div class="callout">
+        <strong>What a lender approves is not what you should spend.</strong> These
+        ratios use gross income, before tax, retirement contributions, health
+        premiums or childcare. A 43% back-end ratio on gross can be 60% or more of
+        what actually reaches your account. The maximum is a ceiling, not a target.
+      </div>
+
+      <h2>What goes into the payment</h2>
+      <h3>Principal and interest</h3>
+      <p>
+        The only part that pays down the loan, and the only part fixed for the life
+        of a fixed-rate mortgage. Everything else can rise.
+      </p>
+      <h3>Property tax</h3>
+      <p>
+        Charged as a percentage of assessed value, and it varies more than any other
+        input on this page — from roughly 0.3% in Hawaii to over 2.2% in New Jersey.
+        On a $400,000 home that is a difference of about $630 a month, which is
+        equivalent to more than a full percentage point of mortgage rate. Use the
+        local figure, not a national average.
+      </p>
+      <h3>Homeowners insurance</h3>
+      <p>
+        Also intensely local. Coastal Florida, tornado-belt Oklahoma and wildfire
+        exposure in parts of California and Colorado carry premiums several times
+        the national median. This has become the fastest-moving line in the payment
+        and is worth quoting before you make an offer, not after.
+      </p>
+      <h3>PMI</h3>
+      <p>
+        Required on conventional loans below 20% down, typically 0.3% to 1.5% of the
+        loan annually depending on credit score and down payment. It is not
+        permanent: it cancels automatically at 78% loan-to-value on the original
+        schedule, and you can request removal at 80%. FHA loans are different — most
+        carry mortgage insurance for the full term, which is why refinancing out of
+        an FHA loan after building equity is so often worth doing.
+      </p>
+
+      <h2>What lenders count that people forget</h2>
+      <ul>
+        <li><strong>Student loans in deferment.</strong> Still counted, usually at 0.5–1% of the balance per month even if you pay nothing today.</li>
+        <li><strong>Co-signed debt.</strong> If your name is on it, it is your debt, regardless of who actually pays.</li>
+        <li><strong>Lease payments.</strong> Counted for the full term, and unlike a loan they never amortize away.</li>
+        <li><strong>Variable income.</strong> Bonus, commission and self-employment income generally needs a two-year history and is averaged. A great year on its own will not count.</li>
+      </ul>
+      <p>
+        What is not counted: utilities, groceries, insurance premiums paid outside
+        escrow, childcare, and anything on a card you pay off monthly. Underwriting
+        looks at obligations on your credit report, which is both narrower and less
+        forgiving than a real budget.
+      </p>
+
+      <h2>Common questions</h2>
+      <dl class="faq">
+        <dt>Should I borrow the maximum?</dt>
+        <dd>
+          Rarely. The ratios ignore everything that is not a reported debt, and they
+          leave no room for the maintenance a house generates. A useful sanity check
+          is to live on the new payment for three months before committing —
+          transfer the difference between your current housing cost and the proposed
+          one into savings and see whether it holds.
+        </dd>
+        <dt>How much does a rate change move my price?</dt>
+        <dd>
+          Roughly 10% of purchase price per percentage point at current levels. Drag
+          the rate slider and watch the headline — it moves further than most people
+          expect, which is why pre-approvals expire.
+        </dd>
+        <dt>Does a bigger down payment always help?</dt>
+        <dd>
+          Up to 20%, substantially — it removes PMI and lowers the loan. Past 20% the
+          benefit is just the smaller balance, and the cash may be worth more as
+          reserves. Lenders like to see two to six months of payments left over after
+          closing, and buyers who empty their savings to reach 25% down often find
+          the first repair unaffordable.
+        </dd>
+      </dl>
+    </section>
+
+    <RelatedTools items={related} />
+  </AffordabilityTool>
+</BaseLayout>
+
+<script>
+  import '../../scripts/af-island';
+</script>

@@ -1,0 +1,106 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import AdSlot from '@kit/components/AdSlot.astro';
+import { SITE, TOOLS } from '../lib/site';
+import { STATES } from '@data/states';
+import { METROS } from '@data/metros';
+
+const title = `${SITE.name} — ${SITE.tagline}`;
+const description = SITE.description;
+const canonical = '/';
+
+const groups = [
+  { key: 'buy', label: 'Buying a home', desc: 'What you can carry, what it costs to get in, and whether to buy at all.' },
+  { key: 'refinance', label: 'Refinancing and equity', desc: 'Whether a new rate pays for itself, and how to pull equity without repricing everything.' },
+  { key: 'invest', label: 'Investing', desc: 'Underwriting a rental deal on the numbers that decide it.' },
+] as const;
+
+const schema = [{
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  itemListElement: TOOLS.map((t, i) => ({
+    '@type': 'ListItem', position: i + 1, name: t.title, url: `${SITE.url}/tools/${t.slug}`,
+  })),
+}];
+---
+<BaseLayout {title} {description} {canonical} {schema}>
+  <div class="page">
+    <section style="padding-block:var(--s-8) var(--s-6);max-width:none">
+      <h1 style="font-size:var(--t-4xl);max-width:16ch">Mortgage math, with the work shown.</h1>
+      <p style="max-width:58ch;font-size:var(--t-md);color:var(--c-ink-2);margin-top:var(--s-4)">
+        Seven calculators for buying, refinancing and investing. Every one shows the
+        full schedule behind the number, states its assumptions, and gives you a URL
+        you can send to someone else with your inputs intact.
+      </p>
+      <div class="chip-row" style="margin-top:var(--s-5)">
+        <a class="btn btn--primary" href="/tools/amortization-calculator">Amortization calculator</a>
+        <a class="btn" href="/tools/home-affordability-calculator">What can I afford?</a>
+      </div>
+    </section>
+
+    <AdSlot unit="home-top" variant="leaderboard" lazy={false} />
+
+    {groups.map((g) => (
+      <section style="margin-top:var(--s-7)">
+        <div class="section-head">
+          <h2>{g.label}</h2>
+          <p>{g.desc}</p>
+        </div>
+        <div class="cards">
+          {TOOLS.filter((t) => t.group === g.key).map((t) => (
+            <a class="card" href={`/tools/${t.slug}`}>
+              <span class="card__title">{t.nav}</span>
+              <span class="card__desc">{t.blurb}</span>
+            </a>
+          ))}
+        </div>
+      </section>
+    ))}
+
+    <AdSlot unit="home-mid" variant="inline" />
+
+    <section style="margin-top:var(--s-7)" class="prose">
+      <h2>Why these are built the way they are</h2>
+      <p>
+        Most mortgage calculators answer a question nobody asked. They report a
+        monthly payment to two decimal places and stop, which is fine for the one
+        input people already know and useless for every decision that actually
+        follows from it.
+      </p>
+      <p>
+        The tools here are built around comparisons instead. Refinancing is not a
+        question about a lower payment, it is a question about whether a lower rate
+        repays its costs before you move. Renting versus buying is not a question
+        about payment versus rent, it is a question about where your net worth lands
+        in ten years with the down payment invested either way. Those need a model
+        and a chart, not a single figure.
+      </p>
+      <p>
+        Every calculator encodes its inputs in the URL, so a result is something you
+        can send to a partner, a lender or a forum thread and have them see exactly
+        what you saw. Every one states what it leaves out — because the assumptions
+        are usually where the answer really comes from.
+      </p>
+    </section>
+
+    <section style="margin-top:var(--s-7)">
+      <div class="section-head">
+        <h2>Closing costs by state</h2>
+        <p>Transfer taxes, recording fees and attorney requirements, state by state.</p>
+      </div>
+      <div class="chip-row">
+        {STATES.map((s) => <a class="chip" href={`/closing-costs/${s.slug}`}>{s.name}</a>)}
+      </div>
+    </section>
+
+    <section style="margin-top:var(--s-7)">
+      <div class="section-head">
+        <h2>Affordability by city</h2>
+        <p>Local property tax rates, insurance and median prices.</p>
+      </div>
+      <div class="chip-row">
+        {METROS.map((m) => <a class="chip" href={`/affordability/${m.slug}`}>{m.name}</a>)}
+      </div>
+    </section>
+  </div>
+</BaseLayout>

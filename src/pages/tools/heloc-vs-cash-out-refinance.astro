@@ -1,0 +1,323 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ToolShell from '@kit/components/ToolShell.astro';
+import Field from '@kit/components/Field.astro';
+import Chart from '@kit/components/Chart.astro';
+import AdSlot from '@kit/components/AdSlot.astro';
+import RelatedTools from '@kit/components/RelatedTools.astro';
+import { SITE, toolBySlug, toolsExcept } from '../../lib/site';
+import { D } from '../../lib/tools/heloc';
+
+const tool = toolBySlug('heloc-vs-cash-out-refinance')!;
+const canonical = `/tools/${tool.slug}`;
+const title = `HELOC vs Cash-Out Refinance Calculator | ${SITE.name}`;
+const description =
+  'Compare a HELOC against a cash-out refinance on total cost, not monthly ' +
+  'payment — including what re-pricing your existing balance actually costs.';
+
+const schema = [{
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE.url },
+    { '@type': 'ListItem', position: 2, name: 'Calculators', item: `${SITE.url}/tools` },
+    { '@type': 'ListItem', position: 3, name: tool.nav, item: `${SITE.url}${canonical}` },
+  ],
+}];
+
+const related = toolsExcept(tool.slug).slice(0, 3).map((t) => ({
+  href: `/tools/${t.slug}`, title: t.title, desc: t.blurb,
+}));
+---
+<BaseLayout {title} {description} {canonical} {schema}>
+  <ToolShell
+    title="HELOC vs Cash-Out Refinance"
+    intro="Two ways to turn equity into cash. A HELOC prices only the new money; a cash-out refinance re-prices your entire balance at today's rate. If you are holding a low first mortgage, that difference is usually larger than everything else combined."
+    breadcrumbs={[{ href: '/', label: 'Home' }, { href: '/tools', label: 'Calculators' }, { label: tool.nav }]}
+    adSlotTop="hl-top"
+    adSlotResults="hl-results"
+    calcId="hl"
+  >
+    <form slot="controls" id="hl-form">
+      <div class="fieldset">
+        <legend>Your position</legend>
+        <Field name="value" label="Home value" affix="currency" value={D.value}
+               min={10000} max={20000000} step={5000}
+               slider sliderMin={100000} sliderMax={2000000} sliderStep={10000} />
+        <Field name="bal" label="Current mortgage balance" affix="currency" value={D.bal}
+               min={0} max={20000000} step={1000}
+               slider sliderMin={0} sliderMax={1500000} sliderStep={5000} />
+        <div class="field-grid field-grid--2">
+          <Field name="crate" label="Current rate" affix="percent" value={D.crate} min={0} max={25} step={0.125} />
+          <Field name="cleft" label="Months remaining" value={D.cleft} min={1} max={600} step={1} />
+        </div>
+        <Field name="cash" label="Cash you need" affix="currency" value={D.cash}
+               min={0} max={5000000} step={1000}
+               slider sliderMin={0} sliderMax={500000} sliderStep={5000} />
+      </div>
+
+      <div class="fieldset">
+        <legend>HELOC / home equity loan</legend>
+        <div class="field-grid field-grid--2">
+          <Field name="hrate" label="Rate" affix="percent" value={D.hrate} hint="usually variable" min={0} max={30} step={0.125} />
+          <Field name="hterm" label="Term (months)" value={D.hterm} min={12} max={480} step={12} />
+        </div>
+        <Field name="hcost" label="Closing costs" affix="currency" value={D.hcost} hint="often minimal" min={0} max={50000} step={100} />
+      </div>
+
+      <div class="fieldset">
+        <legend>Cash-out refinance</legend>
+        <div class="field-grid field-grid--2">
+          <Field name="rrate" label="New rate" affix="percent" value={D.rrate} min={0} max={25} step={0.125} />
+          <Field name="rterm" label="Term (months)" value={D.rterm} min={12} max={600} step={12} />
+        </div>
+        <Field name="rcost" label="Closing costs" affix="currency" value={D.rcost} hint="rolled into the new loan" min={0} max={200000} step={250} />
+      </div>
+
+      <div class="fieldset">
+        <legend>Comparison</legend>
+        <Field name="years" label="Years to compare" value={D.years} min={1} max={40} step={1}
+               slider sliderMin={1} sliderMax={30} sliderStep={1} />
+      </div>
+    </form>
+
+    <div slot="results" class="results">
+      <div class="results__headline">
+        <div class="results__headline-label" id="hl-label">Cheaper option over the period</div>
+        <div class="results__headline-value num" data-out="advantage" data-fmt="currency">—</div>
+        <div class="results__headline-sub" id="hl-sub">Difference in total cost between the two routes.</div>
+      </div>
+
+      <div class="results__grid">
+        <div class="stat">
+          <div class="stat__label">HELOC — monthly</div>
+          <div class="stat__value num" data-out="helocTotalMonthly" data-fmt="currency2">—</div>
+          <div class="stat__note">
+            first mortgage <span data-out="currentPayment" data-fmt="currency">—</span>
+            + HELOC <span data-out="helocPayment" data-fmt="currency">—</span>
+          </div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Cash-out — monthly</div>
+          <div class="stat__value num" data-out="refiPayment" data-fmt="currency2">—</div>
+          <div class="stat__note">one loan of <span data-out="refiPrincipal" data-fmt="currency">—</span></div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Blended rate, HELOC route</div>
+          <div class="stat__value num" data-out="blendedRateHeloc" data-fmt="percent">—</div>
+          <div class="stat__note">across both liens</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Loan-to-value after</div>
+          <div class="stat__value num" data-out="ltvAfter" data-fmt="percent0">—</div>
+          <div class="stat__note">
+            up to <span data-out="maxCashAt80" data-fmt="currency">—</span> available at 80%
+          </div>
+        </div>
+      </div>
+
+      <div class="results__chart">
+        <Chart id="chart-hl" height={210} label="Total cost — cash paid plus debt still owed"
+               caption="Lower is better. Both lines include the balance outstanding at each point." />
+      </div>
+
+      <div class="results__actions">
+        <button type="button" class="btn btn--primary" data-action="share">Copy shareable link</button>
+        <button type="button" class="btn" data-action="reset">Reset</button>
+      </div>
+    </div>
+
+    <div id="hl-verdict" style="margin-top:var(--s-5)"></div>
+
+    <AdSlot unit="hl-mid" variant="inline" />
+
+    <section class="prose" style="margin-top:var(--s-7)">
+      <h2>The re-pricing problem</h2>
+      <p>
+        A cash-out refinance does not just lend you the cash you asked for. It pays
+        off your existing mortgage and writes a new one for the whole amount, which
+        means every dollar you already owed is re-priced at today's rate.
+      </p>
+      <p>
+        Borrow $60,000 against a $300,000 balance at 3.25%, and a cash-out at 6.75%
+        does not cost you 6.75% on $60,000. It costs 6.75% on $360,000 — the new
+        rate applies to the $300,000 you were happily paying 3.25% on. That
+        difference alone is roughly $10,500 in the first year, before you have
+        touched the cost of the new money.
+      </p>
+      <div class="callout">
+        <strong>This is the whole decision, most of the time.</strong> If your
+        current rate is well below market, a HELOC at a visibly higher headline rate
+        is usually still much cheaper, because it only prices the new borrowing. If
+        your current rate is at or above market, that logic reverses and a cash-out
+        can refinance and fund in one move.
+      </div>
+
+      <h2>How the two actually differ</h2>
+      <h3>HELOC</h3>
+      <p>
+        A revolving line secured by a second lien. You draw what you need, when you
+        need it, and pay interest only on the drawn balance. Closing costs are
+        usually minimal — often a few hundred dollars, sometimes nothing. Rates are
+        almost always variable, tied to the prime rate, and they move with it.
+      </p>
+      <p>
+        Most HELOCs run a 10-year draw period with interest-only payments, followed
+        by a 20-year repayment period when principal kicks in. That transition is
+        the trap: a payment that was $400 during the draw can become $900 overnight
+        when repayment begins, and borrowers who treated the interest-only figure as
+        the real cost get caught.
+      </p>
+      <h3>Home equity loan</h3>
+      <p>
+        The fixed-rate sibling. One lump sum, fixed rate, fixed payment,
+        amortizing from day one. Less flexible than a HELOC and far more predictable.
+        Model it here by setting the HELOC term to the loan term — the arithmetic is
+        the same.
+      </p>
+      <h3>Cash-out refinance</h3>
+      <p>
+        One new first mortgage replacing the old one. Fixed rate available, one
+        payment, and full closing costs of roughly 2–5% of the new loan — typically
+        $6,000 to $12,000, usually rolled in, which means you finance them for
+        30 years.
+      </p>
+
+      <h2>Limits you will hit</h2>
+      <ul>
+        <li>
+          <strong>80% combined loan-to-value</strong> is the practical ceiling for
+          both. Some lenders go to 85% or 90% on a HELOC at a higher rate; cash-out
+          refinances are generally capped at 80% for conventional loans. VA cash-out
+          can reach 100%.
+        </li>
+        <li>
+          <strong>Seasoning.</strong> Cash-out refinances usually require 12 months
+          of ownership. HELOCs often need less.
+        </li>
+        <li>
+          <strong>Second-lien pricing.</strong> A HELOC sits behind the first
+          mortgage, so it is paid second in a foreclosure. That risk is why the rate
+          is higher even though the collateral is identical.
+        </li>
+      </ul>
+
+      <h2>Which to choose</h2>
+      <p><strong>A HELOC generally wins when:</strong></p>
+      <ul>
+        <li>Your existing rate is meaningfully below current market rates.</li>
+        <li>You need the money in stages — a renovation paid in phases, tuition by semester — rather than all at once.</li>
+        <li>You expect to repay quickly, so the variable rate has little time to move against you.</li>
+        <li>The amount is small relative to the balance, making full closing costs disproportionate.</li>
+      </ul>
+      <p><strong>A cash-out refinance generally wins when:</strong></p>
+      <ul>
+        <li>Current rates are at or below your existing rate, so you refinance and fund at once.</li>
+        <li>You need a large sum immediately and want it at a fixed rate.</li>
+        <li>You want one payment rather than two.</li>
+        <li>You are consolidating higher-rate debt and want certainty over flexibility.</li>
+      </ul>
+
+      <h2>What neither of these is</h2>
+      <p>
+        Both convert unsecured risk into secured risk. Paying off credit cards with
+        home equity lowers the rate and moves the consequence of non-payment from a
+        collections call to foreclosure. That is a genuine trade, and it is only a
+        good one if the spending that created the balance has actually stopped.
+      </p>
+      <p>
+        Interest is deductible only when the funds are used to buy, build or
+        substantially improve the home securing the loan. Using a HELOC to pay off
+        cards or fund a wedding is not deductible, whatever the marketing implies —
+        and most households take the standard deduction anyway.
+      </p>
+
+      <h2>Common questions</h2>
+      <dl class="faq">
+        <dt>Can I get a HELOC and keep my low first mortgage?</dt>
+        <dd>
+          Yes — that is the central advantage. The HELOC is a separate second lien
+          and does not touch the first mortgage's rate or term.
+        </dd>
+        <dt>What happens if rates rise on a HELOC?</dt>
+        <dd>
+          Your payment rises with them. Most HELOCs have a lifetime cap, often
+          around 18%, which is high enough to be little comfort. If a rate rise of
+          three or four points would break your budget, take the fixed option.
+        </dd>
+        <dt>Can I have both?</dt>
+        <dd>
+          Yes, and it is sometimes the right answer: refinance the first mortgage if
+          rates justify it on their own merits, and open a HELOC separately for
+          flexible access. Judge each on its own terms — the
+          <a href="/tools/refinance-break-even-calculator">refinance break-even
+          calculator</a> handles the first half.
+        </dd>
+      </dl>
+    </section>
+
+    <RelatedTools items={related} />
+  </ToolShell>
+</BaseLayout>
+
+<script>
+  import { mount } from '@kit/calc/engine';
+  import { lineChart } from '@kit/calc/chart';
+  import { currency, currencyCompact } from '@kit/calc/format';
+  import { FIELDS, compute } from '../../lib/tools/heloc';
+  import type { HelocModel } from '../../lib/tools/heloc';
+
+  document.getElementById('hl-form')?.addEventListener('submit', (e) => e.preventDefault());
+
+  mount<HelocModel>({
+    id: 'hl',
+    fields: FIELDS,
+    compute,
+    debounceMs: 90,
+    onRender(m) {
+      const el = document.getElementById('chart-hl');
+      if (el) {
+        const n = m.helocSeries.length;
+        lineChart(el, {
+          series: [
+            { name: 'HELOC', color: 'var(--c-series-1)', points: m.helocSeries },
+            { name: 'Cash-out refinance', color: 'var(--c-series-3)', points: m.refiSeries },
+          ],
+          yFormat: currencyCompact,
+          xFormat: (i) => `Year ${(i * 3 / 12).toFixed(1)}`,
+          xTicks: Array.from({ length: n }, (_, i) => ({ at: i, label: i === 0 ? 'Now' : `Y${Math.round(i * 3 / 12)}` }))
+            .filter((_, i) => i % Math.max(1, Math.ceil(n / 8)) === 0),
+          crosshair: true,
+          height: 210,
+        });
+      }
+
+      const label = document.getElementById('hl-label');
+      const sub = document.getElementById('hl-sub');
+      if (label) label.textContent = m.helocWins ? 'HELOC is cheaper by' : 'Cash-out refinance is cheaper by';
+      if (sub) {
+        sub.textContent = m.helocWins
+          ? `Over ${Math.round(m.months / 12)} years, on cash paid plus debt still owed.`
+          : `Over ${Math.round(m.months / 12)} years — the lower rate on the whole balance outweighs the closing costs.`;
+      }
+
+      const verdict = document.getElementById('hl-verdict');
+      if (!verdict) return;
+      const parts: string[] = [];
+
+      if (m.repricingCost > 0) {
+        parts.push(`<p><strong>Re-pricing costs ${currency(m.repricingCost)} in the first year alone.</strong> A cash-out refinance moves your existing ${currency(m.repricedAmount)} balance from its current rate to the new one. That charge applies to money you had already borrowed, before any of the new cash is priced.</p>`);
+      } else if (m.repricingCost < 0) {
+        parts.push(`<p><strong>Re-pricing works in your favour here.</strong> The new rate is below your current one, so refinancing the existing ${currency(m.repricedAmount)} balance saves roughly ${currency(Math.abs(m.repricingCost))} of interest in the first year — on top of funding the cash you need.</p>`);
+      }
+
+      if (m.exceeds80) {
+        parts.push(`<p><strong>This takes you past 80% loan-to-value.</strong> At ${m.ltvAfter.toFixed(0)}% you are above the usual conventional ceiling. Most lenders cap cash-out refinances at 80%; some HELOC lenders will go higher at a premium rate. Borrowing ${currency(m.maxCashAt80)} or less keeps you inside the standard limit.</p>`);
+      }
+
+      parts.push(`<p>The HELOC route leaves you with a blended rate of <strong>${m.blendedRateHeloc.toFixed(2)}%</strong> across both liens. Comparing that blend against the single cash-out rate applied to the whole balance is the fastest way to sanity-check the answer above.</p>`);
+
+      verdict.innerHTML = `<div class="note"><strong class="note__title">What is driving this</strong>${parts.join('')}</div>`;
+    },
+  });
+</script>

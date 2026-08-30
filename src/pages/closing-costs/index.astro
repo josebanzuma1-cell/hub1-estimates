@@ -1,0 +1,61 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AdSlot from '@kit/components/AdSlot.astro';
+import { SITE } from '../../lib/site';
+import { STATES } from '@data/states';
+
+const title = `Closing Costs by State — Transfer Tax & Fees | ${SITE.name}`;
+const description =
+  'Real estate transfer taxes, recording fees and attorney requirements for all ' +
+  '50 states and DC, with a calculator for each.';
+const canonical = '/closing-costs';
+
+const sorted = [...STATES].sort((a, b) => (b.transferTaxPct ?? 0) - (a.transferTaxPct ?? 0));
+const noTax = STATES.filter((s) => s.transferTaxPct === null);
+---
+<BaseLayout {title} {description} {canonical}>
+  <div class="page">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span aria-hidden="true">/</span><span aria-current="page">Closing costs by state</span>
+    </nav>
+    <div class="tool-hero">
+      <h1>Closing costs by state</h1>
+      <p>
+        Transfer tax is the line that varies most between states — from nothing at
+        all in {noTax.length} of them to 4% of the purchase price in Delaware. On a
+        $400,000 home that is a spread of $16,000 for an identical transaction.
+      </p>
+    </div>
+    <AdSlot unit="cc-index-top" variant="leaderboard" lazy={false} />
+
+    <section style="margin-top:var(--s-6)">
+      <div class="section-head">
+        <h2>Ranked by state transfer tax</h2>
+        <p>State-level rate only. Counties and cities frequently add their own on top.</p>
+      </div>
+      <div class="table-wrap">
+        <table class="data">
+          <thead>
+            <tr><th>State</th><th>Transfer tax</th><th>Paid by</th><th>On $400k</th><th>Attorney</th></tr>
+          </thead>
+          <tbody>
+            {sorted.map((s) => (
+              <tr>
+                <td><a href={`/closing-costs/${s.slug}`}>{s.name}</a></td>
+                <td>{s.transferTaxPct === null ? 'None' : `${s.transferTaxPct}%`}</td>
+                <td style="text-transform:capitalize">{s.transferTaxPct === null ? '—' : s.transferTaxPaidBy}</td>
+                <td>{s.transferTaxPct === null ? '$0' : `$${Math.round(400000 * (s.transferTaxPct / 100)).toLocaleString()}`}</td>
+                <td>{s.attorneyState ? 'Required' : '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="note note--warn" style="margin-top:var(--s-4)">
+        <strong class="note__title">Unverified estimates</strong>
+        These figures are seeded and have not yet been checked against each state's
+        department of revenue. Verify before relying on any of them.
+      </p>
+    </section>
+  </div>
+</BaseLayout>

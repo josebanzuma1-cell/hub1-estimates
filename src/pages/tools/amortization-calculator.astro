@@ -1,0 +1,439 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ToolShell from '@kit/components/ToolShell.astro';
+import Field from '@kit/components/Field.astro';
+import Segmented from '@kit/components/Segmented.astro';
+import Chart from '@kit/components/Chart.astro';
+import AdSlot from '@kit/components/AdSlot.astro';
+import RelatedTools from '@kit/components/RelatedTools.astro';
+import { SITE, toolBySlug, toolsExcept } from '../../lib/site';
+import { D } from '../../lib/tools/amortization';
+
+const tool = toolBySlug('amortization-calculator')!;
+const canonical = `/tools/${tool.slug}`;
+const title = `Amortization Calculator with Extra Payments | ${SITE.name}`;
+const description =
+  'See your full mortgage amortization schedule and exactly how much an extra ' +
+  'monthly payment cuts from your interest and payoff date. Shareable results.';
+
+const schema = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE.url },
+      { '@type': 'ListItem', position: 2, name: 'Calculators', item: `${SITE.url}/tools` },
+      { '@type': 'ListItem', position: 3, name: tool.nav, item: `${SITE.url}${canonical}` },
+    ],
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'Does paying extra on a mortgage reduce the monthly payment?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'No. Extra principal shortens the loan rather than lowering the payment. The scheduled payment stays the same and the loan ends earlier. To lower the payment itself you need a recast or a refinance.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Is it better to pay extra monthly or once a year?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Monthly wins, because each payment starts reducing interest immediately rather than waiting up to eleven months. The gap is small — usually a few thousand dollars over a 30-year loan — so consistency matters more than timing.',
+        },
+      },
+    ],
+  },
+];
+
+const related = toolsExcept(tool.slug).slice(0, 3).map((t) => ({
+  href: `/tools/${t.slug}`, title: t.title, desc: t.blurb,
+}));
+---
+<BaseLayout {title} {description} {canonical} {schema}>
+  <ToolShell
+    title="Amortization Calculator with Extra Payments"
+    intro="Enter your loan and see the whole schedule — every payment split into principal and interest. Add an extra payment and the chart shows the payoff date move."
+    breadcrumbs={[{ href: '/', label: 'Home' }, { href: '/tools', label: 'Calculators' }, { label: tool.nav }]}
+    adSlotTop="amort-top"
+    adSlotResults="amort-results"
+    calcId="amort"
+  >
+    <form slot="controls" id="amort-form">
+      <Field name="loan" label="Loan amount" affix="currency" value={D.loan}
+             min={1000} max={10000000} step={1000}
+             slider sliderMin={50000} sliderMax={1500000} sliderStep={5000} />
+
+      <Field name="rate" label="Interest rate" affix="percent" value={D.rate}
+             hint="APR on the note" min={0} max={25} step={0.125}
+             slider sliderMin={0} sliderMax={12} sliderStep={0.125} />
+
+      <Segmented name="term" label="Loan term" value={D.term}
+                 options={[{ value: 15, label: '15 yr' }, { value: 20, label: '20 yr' }, { value: 30, label: '30 yr' }]} />
+
+      <div class="fieldset">
+        <legend>Extra principal</legend>
+        <Field name="extra" label="Extra every month" affix="currency" value={D.extra}
+               hint="applied to principal" min={0} max={50000} step={25}
+               slider sliderMin={0} sliderMax={3000} sliderStep={25} />
+        <div class="field-grid field-grid--2">
+          <Field name="annual" label="Extra once a year" affix="currency" value={D.annual} min={0} max={500000} step={100} />
+          <Field name="lump" label="One-time lump sum" affix="currency" value={D.lump} min={0} max={5000000} step={1000} />
+        </div>
+        <Field name="lumpm" label="Lump sum applied at month" value={D.lumpm} min={1} max={600} step={1} />
+      </div>
+    </form>
+
+    <div slot="results" class="results">
+      <div class="results__headline">
+        <div class="results__headline-label">Monthly payment · principal &amp; interest</div>
+        <div class="results__headline-value num" data-out="monthlyPayment" data-fmt="currency2">—</div>
+        <div class="results__headline-sub">
+          Taxes, insurance and any HOA or PMI are on top of this.
+          <a href="/tools/home-affordability-calculator" style="color:inherit;text-decoration:underline">Estimate the full payment</a>.
+        </div>
+      </div>
+
+      <div class="results__grid">
+        <div class="stat">
+          <div class="stat__label">Loan paid off</div>
+          <div class="stat__value num" data-out="payoffDateMonths" data-fmt="date">—</div>
+          <div class="stat__note"><span data-out="payoffMonths" data-fmt="months">—</span> from now</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Total interest</div>
+          <div class="stat__value num" data-out="totalInterest" data-fmt="currency">—</div>
+          <div class="stat__note">over the life of the loan</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Interest saved</div>
+          <div class="stat__value num stat__value--pos" data-out="interestSaved" data-fmt="currency">—</div>
+          <div class="stat__note">vs no extra payments</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Time saved</div>
+          <div class="stat__value num stat__value--pos" data-out="monthsSaved" data-fmt="months">—</div>
+          <div class="stat__note">off the original term</div>
+        </div>
+      </div>
+
+      <div class="results__chart">
+        <Chart id="chart-balance" height={210} label="Remaining balance" />
+      </div>
+
+      <div class="results__actions">
+        <button type="button" class="btn btn--primary" data-action="share">Copy shareable link</button>
+        <button type="button" class="btn" data-action="reset">Reset</button>
+      </div>
+    </div>
+
+    <section style="margin-top:var(--s-7)">
+      <div class="section-head">
+        <h2>Where the money goes each year</h2>
+        <p>Early payments are almost entirely interest. The crossover — the year principal finally overtakes interest — is the single most useful thing this chart shows.</p>
+      </div>
+      <Chart id="chart-split" height={240} caption="Principal includes any extra payments you added." />
+    </section>
+
+    <AdSlot unit="amort-mid" variant="inline" />
+
+    <section>
+      <div class="section-head">
+        <h2>Payment schedule</h2>
+        <p>Yearly totals by default. Switch to monthly to see the exact row where the balance hits zero.</p>
+      </div>
+      <div class="chip-row" style="margin-bottom:var(--s-4)">
+        <button type="button" class="btn" data-view="year" data-view-active="true">Yearly</button>
+        <button type="button" class="btn" data-view="month">Monthly</button>
+      </div>
+      <div class="table-wrap" style="max-height:520px;overflow-y:auto">
+        <table class="data" id="schedule-table">
+          <thead>
+            <tr><th>Period</th><th>Payment</th><th>Principal</th><th>Interest</th><th>Balance</th></tr>
+          </thead>
+          <tbody><tr><td colspan="5" style="text-align:center;color:var(--c-ink-3)">Calculating…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="prose" style="margin-top:var(--s-7)">
+      <h2>How mortgage amortization actually works</h2>
+      <p>
+        An amortizing loan is one where every payment is the same size, but the
+        split inside that payment changes every single month. Interest is charged
+        on whatever you still owe, so at the start — when you owe the most — almost
+        all of the payment is interest. As the balance falls, the interest charge
+        falls with it, and the leftover principal portion grows. The payment never
+        moves; the mix inside it does.
+      </p>
+      <p>
+        That is why a 30-year loan feels like it goes nowhere for the first decade.
+        On a $400,000 loan at 6.5%, the first payment is roughly $2,167 of interest
+        and $361 of principal. The halfway point — the first month where more of
+        the payment goes to principal than to interest — does not arrive until
+        payment 233, just past the nineteen-year mark.
+      </p>
+
+      <h3>The payment formula</h3>
+      <p>
+        Every fixed-rate mortgage payment comes from one equation. Lenders call it
+        the level-payment or annuity formula:
+      </p>
+      <div class="formula">
+        M = P × [ r(1 + r)<sup>n</sup> ] / [ (1 + r)<sup>n</sup> − 1 ]
+      </div>
+      <p>
+        <strong>M</strong> is the monthly payment. <strong>P</strong> is the amount
+        borrowed. <strong>r</strong> is the monthly interest rate — the annual rate
+        divided by 12, so 6.5% becomes 0.0054167. <strong>n</strong> is the total
+        number of payments: 360 for a 30-year loan, 180 for a 15-year.
+      </p>
+      <p>
+        The schedule then runs month by month. Each month the calculator charges
+        interest of <code>balance × r</code>, applies whatever is left of the
+        payment to principal, subtracts any extra principal you added, and carries
+        the new balance into the next row. That iteration is the reason extra
+        payments cannot be modelled with a formula alone — they change the balance
+        path, and every later interest charge with it.
+      </p>
+
+      <h2>What each input changes</h2>
+      <h3>Loan amount</h3>
+      <p>
+        The amount financed, not the purchase price. If you are putting 20% down on
+        a $500,000 house, the loan amount is $400,000. Rolled-in closing costs and
+        a financed VA funding fee belong here too.
+      </p>
+      <h3>Interest rate</h3>
+      <p>
+        Use the note rate, not the APR. APR bundles fees into a single comparison
+        figure, which makes it useful for shopping lenders and wrong for computing
+        a payment. Your actual payment is calculated from the note rate.
+      </p>
+      <h3>Term</h3>
+      <p>
+        A 15-year loan usually carries a rate about 0.5 to 0.75 points below a
+        30-year, and it forces the discipline that extra payments only invite. The
+        payment is substantially higher — roughly 45% more on the same balance —
+        which is the real trade-off. A 30-year with voluntary extra payments gives
+        you most of the interest savings and keeps the low required payment as a
+        fallback if your income changes.
+      </p>
+      <h3>Extra principal</h3>
+      <p>
+        Anything above the scheduled payment, applied straight to the balance. The
+        three fields here cover the three patterns people actually use: a fixed
+        amount every month, a once-a-year lump from a bonus or tax refund, and a
+        single large payment from a windfall.
+      </p>
+
+      <h2>A worked example</h2>
+      <p>
+        Take the default: $400,000 at 6.5% over 30 years. The payment is $2,528.27
+        and the total interest over the full term is about $510,178 — more than the
+        house cost.
+      </p>
+      <p>
+        Add $200 a month. The payoff moves in by five years and seven months, and
+        total interest drops by about $112,000. Every one of those dollars is a
+        guaranteed, tax-free 6.5% return, because a dollar of principal prepaid is a
+        dollar you never pay 6.5% on again.
+      </p>
+      <div class="callout">
+        <strong>The compounding is front-loaded.</strong> An extra $200 in year one
+        removes roughly 30 years of future interest on that $200. The same $200 in
+        year 25 removes five. If you are going to prepay, prepaying early is worth
+        several times what prepaying late is worth — which is the opposite of how
+        most people schedule it.
+      </div>
+
+      <h2>Paying extra does not lower your payment</h2>
+      <p>
+        This is the most common misunderstanding about mortgages, and it costs
+        people real money when they assume otherwise. Extra principal shortens the
+        loan; it does not shrink the required payment. Pay $50,000 down on a
+        $400,000 mortgage and next month's bill is still $2,528.27 — you have simply
+        bought yourself years off the back end.
+      </p>
+      <p>There are two ways to actually reduce the payment:</p>
+      <ul>
+        <li>
+          <strong>A recast.</strong> After a large principal payment, some servicers
+          will re-amortize the remaining balance over the remaining term, which does
+          lower the payment. It typically costs $150–$500 and keeps your existing
+          rate. Not all loans are eligible, and most servicers do not advertise it —
+          you have to ask.
+        </li>
+        <li>
+          <strong>A refinance.</strong> A new loan at a new rate and a new term. This
+          only makes sense if the rate improvement pays back the closing costs
+          before you sell or refinance again — which is exactly what the
+          <a href="/tools/refinance-break-even-calculator">refinance break-even calculator</a>
+          works out.
+        </li>
+      </ul>
+
+      <h2>When not to pay extra</h2>
+      <p>
+        Prepaying a 6.5% mortgage is a guaranteed 6.5% return, which is genuinely
+        good. It is still the wrong move in several common situations:
+      </p>
+      <ul>
+        <li>
+          <strong>You carry higher-rate debt.</strong> Credit card balances at 22%
+          and personal loans in the teens should be cleared first. The arithmetic is
+          not close.
+        </li>
+        <li>
+          <strong>You have no emergency fund.</strong> Money paid into a mortgage is
+          extremely hard to get back out — you need a HELOC or a cash-out refinance,
+          and both require you to still qualify at the time you need the money,
+          which is exactly when you may not.
+        </li>
+        <li>
+          <strong>You are not capturing your full 401(k) match.</strong> An employer
+          match is an immediate 50–100% return. Nothing about a mortgage competes
+          with that.
+        </li>
+        <li>
+          <strong>Your rate is low.</strong> If you are sitting on a 3% loan, the
+          money almost certainly does better elsewhere, including in a savings
+          account paying more than 3%.
+        </li>
+      </ul>
+
+      <h2>Biweekly payments</h2>
+      <p>
+        The biweekly trick works, but not for the reason it is usually sold. Paying
+        half your mortgage every two weeks means 26 half-payments a year, which is
+        13 full payments instead of 12. The saving comes from that extra payment,
+        not from the fortnightly timing — the timing itself is worth a rounding
+        error.
+      </p>
+      <p>
+        You can reproduce it exactly by dividing your payment by 12 and adding that
+        to the monthly extra field above, with no enrolment and no third-party
+        service fee. Some servicers charge $300–$400 to set up a biweekly plan and
+        then hold the half payments until a full one accumulates, which means you
+        pay for a service that delivers nothing you could not do yourself.
+      </p>
+
+      <h2>Common questions</h2>
+      <dl class="faq">
+        <dt>Do extra payments go to principal automatically?</dt>
+        <dd>
+          Not always. Some servicers apply extra funds to the next month's payment
+          instead, which does nothing for your interest. Check the payment portal
+          for a "principal only" option, and confirm on the next statement that the
+          balance actually dropped by the amount you sent.
+        </dd>
+        <dt>Should I keep the mortgage for the tax deduction?</dt>
+        <dd>
+          Rarely. Since the 2017 standard deduction increase, most households do not
+          itemize at all, so the interest produces no deduction. Even when it does,
+          you are spending a dollar of interest to save your marginal rate on it —
+          roughly 22 to 32 cents. Paying interest to reduce taxes is a losing trade.
+        </dd>
+        <dt>Why does my payment include more than principal and interest?</dt>
+        <dd>
+          Most lenders escrow property taxes and homeowners insurance, and add PMI
+          if you put down less than 20%. Those are real costs but they are not part
+          of amortization — they do not reduce your balance. This calculator models
+          principal and interest only, which is the part that amortizes.
+        </dd>
+        <dt>Is the schedule exact?</dt>
+        <dd>
+          It matches standard lender amortization to the cent for a fixed-rate loan.
+          Real statements can differ by small amounts because of day-count
+          conventions, the timing of your first payment, and how your servicer
+          rounds. Treat the final payment as approximate.
+        </dd>
+      </dl>
+    </section>
+
+    <RelatedTools items={related} />
+  </ToolShell>
+</BaseLayout>
+
+<script>
+  import { mount } from '@kit/calc/engine';
+  import { lineChart, stackedBarChart } from '@kit/calc/chart';
+  import { currency, currencyCompact, months as fmtMonths } from '@kit/calc/format';
+  import { FIELDS, compute } from '../../lib/tools/amortization';
+  import type { AmortModel } from '../../lib/tools/amortization';
+
+  // Enter inside a text input would otherwise submit the form and reload.
+  document.getElementById('amort-form')?.addEventListener('submit', (e) => e.preventDefault());
+
+  let view: 'year' | 'month' = 'year';
+  let latest: AmortModel | null = null;
+
+  function renderTable(m: AmortModel) {
+    const body = document.querySelector('#schedule-table tbody');
+    if (!body) return;
+    const rows = view === 'year'
+      ? m.years.map((y) => [`Year ${y.year}`, y.principal + y.interest, y.principal, y.interest, y.balance])
+      : m.schedule.map((r) => [`Month ${r.month}`, r.payment + r.extra, r.principal + r.extra, r.interest, r.balance]);
+    body.innerHTML = rows
+      .map(([label, pay, prin, int, bal]) =>
+        `<tr><td>${label}</td><td>${currency(pay as number)}</td><td>${currency(prin as number)}</td><td>${currency(int as number)}</td><td>${currency(bal as number)}</td></tr>`)
+      .join('');
+  }
+
+  mount<AmortModel>({
+    id: 'amort',
+    fields: FIELDS,
+    compute,
+    debounceMs: 90,
+    onRender(m) {
+      latest = m;
+      const balanceEl = document.getElementById('chart-balance');
+      if (balanceEl) {
+        const series = [{ name: 'With extra payments', color: 'var(--c-series-1)', points: m.extraBalances, fill: true }];
+        if (m.hasExtra) series.push({ name: 'Scheduled only', color: 'var(--c-series-3)', points: m.baseBalances, dashed: true, fill: false });
+        lineChart(balanceEl, {
+          series, yFormat: currencyCompact, crosshair: true,
+          xFormat: (i) => (i === 0 ? 'Today' : `Year ${i}`),
+          xTicks: tickEvery(m.baseBalances.length),
+          height: 210,
+        });
+      }
+      const splitEl = document.getElementById('chart-split');
+      if (splitEl) {
+        stackedBarChart(splitEl, {
+          groups: m.years.map((y) => ({
+            label: String(y.year),
+            segments: [
+              { value: y.principal, color: 'var(--c-series-1)', name: 'Principal' },
+              { value: y.interest, color: 'var(--c-series-2)', name: 'Interest' },
+            ],
+          })),
+          yFormat: currencyCompact, height: 240, maxLabels: 10,
+        });
+      }
+      renderTable(m);
+    },
+  });
+
+  function tickEvery(n: number) {
+    const step = n > 25 ? 5 : n > 12 ? 2 : 1;
+    const out: Array<{ at: number; label: string }> = [];
+    for (let i = 0; i < n; i += step) out.push({ at: i, label: i === 0 ? 'Now' : `Y${i}` });
+    return out;
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      view = btn.dataset.view as 'year' | 'month';
+      document.querySelectorAll<HTMLElement>('[data-view]').forEach((b) => {
+        b.dataset.viewActive = String(b === btn);
+        b.classList.toggle('btn--primary', b === btn);
+      });
+      if (latest) renderTable(latest);
+    });
+  });
+</script>

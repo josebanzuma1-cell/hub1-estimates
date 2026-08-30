@@ -1,0 +1,53 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AdSlot from '@kit/components/AdSlot.astro';
+import { SITE } from '../../lib/site';
+import { METROS } from '@data/metros';
+
+const title = `Home Affordability by City | ${SITE.name}`;
+const description = 'Price-to-income and price-to-rent ratios, local property tax rates and insurance for major US metros.';
+const canonical = '/affordability';
+const sorted = [...METROS].sort((a, b) => a.medianPrice / a.medianIncome - b.medianPrice / b.medianIncome);
+---
+<BaseLayout {title} {description} {canonical}>
+  <div class="page">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span aria-hidden="true">/</span><span aria-current="page">Affordability by city</span>
+    </nav>
+    <div class="tool-hero">
+      <h1>Affordability by city</h1>
+      <p>
+        Ranked by price-to-income ratio — median home price divided by median
+        household income. It is the cleanest single measure of how stretched a
+        market is, and it varies far more than mortgage rates do.
+      </p>
+    </div>
+    <AdSlot unit="af-index-top" variant="leaderboard" lazy={false} />
+    <section style="margin-top:var(--s-6)">
+      <div class="table-wrap">
+        <table class="data">
+          <thead>
+            <tr><th>Metro</th><th>Median price</th><th>Median income</th><th>Price/income</th><th>Price/rent</th><th>Property tax</th></tr>
+          </thead>
+          <tbody>
+            {sorted.map((m) => (
+              <tr>
+                <td><a href={`/affordability/${m.slug}`}>{m.name}, {m.stateCode}</a></td>
+                <td>${m.medianPrice.toLocaleString()}</td>
+                <td>${m.medianIncome.toLocaleString()}</td>
+                <td>{(m.medianPrice / m.medianIncome).toFixed(1)}x</td>
+                <td>{(m.medianPrice / (m.medianRent * 12)).toFixed(1)}x</td>
+                <td>{m.propertyTaxPct}%</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="note note--warn" style="margin-top:var(--s-4)">
+        <strong class="note__title">Unverified estimates</strong>
+        Seeded figures pending verification against Census ACS tables. See
+        <code>src/data/README.md</code>.
+      </p>
+    </section>
+  </div>
+</BaseLayout>

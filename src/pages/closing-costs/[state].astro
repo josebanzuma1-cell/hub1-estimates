@@ -1,0 +1,184 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ClosingCostTool from '../../components/ClosingCostTool.astro';
+import RelatedTools from '@kit/components/RelatedTools.astro';
+import { SITE, toolsExcept } from '../../lib/site';
+import { STATES } from '@data/states';
+import { metrosByState } from '@data/metros';
+import type { StateData } from '@data/types';
+
+export function getStaticPaths() {
+  return STATES.map((state) => ({ params: { state: state.slug }, props: { state } }));
+}
+
+interface Props { state: StateData }
+const { state } = Astro.props;
+const canonical = `/closing-costs/${state.slug}`;
+const noTransferTax = state.transferTaxPct === null;
+const buyerPays = state.transferTaxPaidBy === 'buyer';
+const split = state.transferTaxPaidBy === 'negotiable';
+const highValue = (state.transferTaxPct ?? 0) >= 1;
+
+const title = `${state.name} Closing Costs Calculator — Transfer Tax & Fees | ${SITE.name}`;
+const description = noTransferTax
+  ? `Estimate buyer closing costs in ${state.name}. The state charges no transfer tax — see what you do pay in title, lender, recording and prepaid items.`
+  : `Estimate buyer closing costs in ${state.name}, including the ${state.transferTaxPct}% transfer tax, title, lender and prepaid items.`;
+
+const metros = metrosByState(state.code);
+const related = toolsExcept('closing-cost-calculator').slice(0, 3).map((t) => ({
+  href: `/tools/${t.slug}`, title: t.title, desc: t.blurb,
+}));
+
+const schema = [{
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE.url },
+    { '@type': 'ListItem', position: 2, name: 'Closing costs by state', item: `${SITE.url}/closing-costs` },
+    { '@type': 'ListItem', position: 3, name: state.name, item: `${SITE.url}${canonical}` },
+  ],
+}];
+---
+<BaseLayout {title} {description} {canonical} {schema}>
+  <ClosingCostTool
+    state={state}
+    title={`Closing Costs in ${state.name}`}
+    intro={noTransferTax
+      ? `${state.name} charges no state transfer tax, which removes the single largest government line from a closing statement. Here is what you do pay.`
+      : `${state.name} charges a ${state.transferTaxPct}% transfer tax, ${buyerPays ? 'customarily paid by the buyer' : split ? 'customarily split between buyer and seller' : 'customarily paid by the seller'}. This estimate uses local rates for tax, recording and insurance.`}
+    breadcrumbs={[
+      { href: '/', label: 'Home' },
+      { href: '/closing-costs', label: 'Closing costs by state' },
+      { label: state.name },
+    ]}
+    defaultPrice={metros[0]?.medianPrice ?? 400000}
+  >
+    <section style="margin-top:var(--s-7)">
+      <div class="section-head"><h2>{state.name} at a glance</h2></div>
+      <div class="table-wrap">
+        <table class="data">
+          <tbody>
+            <tr><td>State transfer tax</td><td>{noTransferTax ? 'None' : `${state.transferTaxPct}% of price`}</td></tr>
+            <tr><td>Customarily paid by</td><td style="text-transform:capitalize">{noTransferTax ? '—' : state.transferTaxPaidBy}</td></tr>
+            <tr><td>Typical recording fees</td><td>${state.recordingFee}</td></tr>
+            <tr><td>Attorney required at closing</td><td>{state.attorneyState ? `Yes — about $${state.attorneyFee.toLocaleString()}` : 'No'}</td></tr>
+            <tr><td>Average effective property tax</td><td>{state.propertyTaxPct}% of value per year</td></tr>
+            <tr><td>Average homeowners premium</td><td>${state.insuranceAnnual.toLocaleString()} per year</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="prose" style="margin-top:var(--s-7)">
+      <h2>Transfer tax in {state.name}</h2>
+      {noTransferTax ? (
+        <>
+          <p>
+            {state.name} is one of a minority of states that imposes no real estate
+            transfer tax. {state.transferTaxNote} For a buyer this is worth real
+            money: on a $400,000 purchase, the equivalent charge would be $4,000 in
+            Pennsylvania or $16,000 in Delaware.
+          </p>
+          <p>
+            You still pay recording fees to put the deed and mortgage on the public
+            record — around ${state.recordingFee} in total — but that is a clerical
+            charge rather than a tax on the transaction. Check whether your county
+            or city imposes anything of its own, since a handful do even where the
+            state does not.
+          </p>
+        </>
+      ) : (
+        <>
+          <p>
+            {state.name} charges {state.transferTaxPct}% of the purchase price when
+            a deed is recorded. {state.transferTaxNote}
+          </p>
+          <p>
+            On a $400,000 purchase that is
+            ${Math.round(400000 * (state.transferTaxPct! / 100)).toLocaleString()} at
+            the state rate{split ? ', which is customarily split so each side pays about half' : buyerPays ? ', customarily paid by the buyer' : ', customarily paid by the seller'}.
+            {buyerPays || split
+              ? ' The calculator above includes your share.'
+              : ' Because the seller customarily pays it, the calculator above excludes it from your costs — but note that custom is not law.'}
+          </p>
+          <div class="callout">
+            <strong>Custom is not law.</strong> Who pays transfer tax is a matter of
+            local convention and it is written into the purchase contract, which
+            means it is negotiable. In a slow market, asking the other side to take
+            it on is a normal ask{highValue ? ' — and at this rate it is worth asking.' : '.'}
+          </div>
+        </>
+      )}
+
+      {state.attorneyState && (
+        <>
+          <h2>Attorney closings in {state.name}</h2>
+          <p>
+            {state.name} is an attorney closing state: a licensed attorney is
+            customarily required to conduct the settlement rather than a title agent
+            alone. Budget roughly ${state.attorneyFee.toLocaleString()}, though the
+            figure varies with the complexity of the transaction and the county.
+          </p>
+          <p>
+            This is not a fee you can remove, but you can choose the attorney. Rates
+            are competitive and quotes vary, so ask two or three rather than
+            defaulting to whoever the agent suggests.
+          </p>
+        </>
+      )}
+
+      <h2>Ongoing costs after closing</h2>
+      <p>
+        Closing costs are one-off; property tax and insurance are forever, and in
+        {' '}{state.name} they matter to affordability more than the closing table does.
+        The average effective property tax rate here is {state.propertyTaxPct}% of
+        market value per year — about
+        ${Math.round(400000 * (state.propertyTaxPct / 100)).toLocaleString()} annually
+        on a $400,000 home, or
+        ${Math.round((400000 * (state.propertyTaxPct / 100)) / 12).toLocaleString()} a
+        month added to your payment.
+      </p>
+      <p>
+        Homeowners insurance averages ${state.insuranceAnnual.toLocaleString()} a year
+        in {state.name}. Both are escrowed by most lenders, which means they arrive
+        as part of the monthly payment rather than as separate bills. Use the
+        <a href="/tools/home-affordability-calculator"> affordability calculator</a> to
+        see what those two lines do to the price you can carry.
+      </p>
+    </section>
+
+    {metros.length > 0 && (
+      <section style="margin-top:var(--s-7)">
+        <div class="section-head">
+          <h2>Affordability in {state.name} metros</h2>
+          <p>Closing costs scale with price, and price varies far more within a state than transfer tax rates do.</p>
+        </div>
+        <div class="cards">
+          {metros.map((m) => (
+            <a class="card" href={`/affordability/${m.slug}`}>
+              <span class="card__title">{m.name}</span>
+              <span class="card__desc">
+                Median ${m.medianPrice.toLocaleString()} · property tax {m.propertyTaxPct}%
+              </span>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <section style="margin-top:var(--s-7)">
+      <div class="section-head"><h2>Other states</h2></div>
+      <div class="chip-row">
+        {STATES.filter((s) => s.code !== state.code).map((s) => (
+          <a class="chip" href={`/closing-costs/${s.slug}`}>{s.name}</a>
+        ))}
+      </div>
+    </section>
+
+    <RelatedTools items={related} />
+  </ClosingCostTool>
+</BaseLayout>
+
+<script>
+  import '../../scripts/cc-island';
+</script>

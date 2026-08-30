@@ -1,0 +1,19 @@
+{
+  "name": "hub-01-mortgage",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Mortgage & real estate calculator hub. Hub 1 of the utility site portfolio.",
+  "scripts": {
+    "dev": "astro dev --port 3025",
+    "build": "npm run data:check && astro build",
+    "preview": "astro preview --port 3025",
+    "astro": "astro",
+    "data:check": "node scripts/check-data.mjs",
+    "data:report": "node scripts/check-data.mjs --report"
+  },
+  "dependencies": {
+    "astro": "^5.6.1",
+    "@fontsource-variable/inter": "^5.2.5"
+  }
+}

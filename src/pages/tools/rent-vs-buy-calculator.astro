@@ -1,0 +1,340 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ToolShell from '@kit/components/ToolShell.astro';
+import Field from '@kit/components/Field.astro';
+import Chart from '@kit/components/Chart.astro';
+import AdSlot from '@kit/components/AdSlot.astro';
+import RelatedTools from '@kit/components/RelatedTools.astro';
+import { SITE, toolBySlug, toolsExcept } from '../../lib/site';
+import { D } from '../../lib/tools/rent-vs-buy';
+
+const tool = toolBySlug('rent-vs-buy-calculator')!;
+const canonical = `/tools/${tool.slug}`;
+const title = `Rent vs Buy Calculator — Net Worth Projection | ${SITE.name}`;
+const description =
+  'Compare renting and buying on net worth, not monthly payment. Includes the ' +
+  'opportunity cost of your down payment, maintenance, and selling costs.';
+
+const schema = [{
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE.url },
+    { '@type': 'ListItem', position: 2, name: 'Calculators', item: `${SITE.url}/tools` },
+    { '@type': 'ListItem', position: 3, name: tool.nav, item: `${SITE.url}${canonical}` },
+  ],
+}];
+
+const related = toolsExcept(tool.slug).slice(0, 3).map((t) => ({
+  href: `/tools/${t.slug}`, title: t.title, desc: t.blurb,
+}));
+---
+<BaseLayout {title} {description} {canonical} {schema}>
+  <ToolShell
+    title="Rent vs Buy Calculator"
+    intro="Monthly payment is the wrong comparison. This runs both paths month by month and reports where you actually end up — with the renter investing the down payment they never had to make."
+    breadcrumbs={[{ href: '/', label: 'Home' }, { href: '/tools', label: 'Calculators' }, { label: tool.nav }]}
+    adSlotTop="rvb-top"
+    adSlotResults="rvb-results"
+    calcId="rvb"
+  >
+    <form slot="controls" id="rvb-form">
+      <div class="fieldset">
+        <legend>The purchase</legend>
+        <Field name="price" label="Home price" affix="currency" value={D.price}
+               min={20000} max={20000000} step={5000}
+               slider sliderMin={100000} sliderMax={2000000} sliderStep={10000} />
+        <div class="field-grid field-grid--2">
+          <Field name="down" label="Down payment" affix="percent" value={D.down} min={0} max={100} step={1} />
+          <Field name="rate" label="Mortgage rate" affix="percent" value={D.rate} min={0} max={25} step={0.125} />
+        </div>
+        <div class="field-grid field-grid--2">
+          <Field name="term" label="Term (years)" value={D.term} min={1} max={50} step={5} />
+          <Field name="close" label="Closing costs" affix="percent" value={D.close} hint="of price" min={0} max={15} step={0.25} />
+        </div>
+      </div>
+
+      <div class="fieldset">
+        <legend>Carrying costs</legend>
+        <div class="field-grid field-grid--2">
+          <Field name="tax" label="Property tax" affix="percent" value={D.tax} hint="of value / yr" min={0} max={10} step={0.05} />
+          <Field name="ins" label="Home insurance" affix="currency" value={D.ins} hint="per year" min={0} max={100000} step={100} />
+        </div>
+        <div class="field-grid field-grid--2">
+          <Field name="maint" label="Maintenance" affix="percent" value={D.maint} hint="of value / yr" min={0} max={10} step={0.1} />
+          <Field name="hoa" label="HOA" affix="currency" value={D.hoa} hint="per month" min={0} max={5000} step={25} />
+        </div>
+      </div>
+
+      <div class="fieldset">
+        <legend>Renting instead</legend>
+        <Field name="rent" label="Monthly rent" affix="currency" value={D.rent}
+               min={100} max={100000} step={50}
+               slider sliderMin={500} sliderMax={10000} sliderStep={50} />
+        <div class="field-grid field-grid--2">
+          <Field name="rgrow" label="Rent growth" affix="percent" value={D.rgrow} hint="per year" min={-10} max={20} step={0.25} />
+          <Field name="rins" label="Renters insurance" affix="currency" value={D.rins} hint="per month" min={0} max={1000} step={5} />
+        </div>
+      </div>
+
+      <div class="fieldset">
+        <legend>Assumptions</legend>
+        <div class="field-grid field-grid--2">
+          <Field name="appr" label="Home appreciation" affix="percent" value={D.appr} hint="per year" min={-10} max={20} step={0.25} />
+          <Field name="invest" label="Investment return" affix="percent" value={D.invest} hint="per year" min={-10} max={25} step={0.25} />
+        </div>
+        <div class="field-grid field-grid--2">
+          <Field name="sell" label="Cost to sell" affix="percent" value={D.sell} hint="agent + fees" min={0} max={20} step={0.5} />
+          <Field name="years" label="Years to compare" value={D.years} min={1} max={40} step={1} />
+        </div>
+      </div>
+    </form>
+
+    <div slot="results" class="results">
+      <div class="results__headline">
+        <div class="results__headline-label">Buying vs renting after <span data-out="years" data-fmt="number">10</span> years</div>
+        <div class="results__headline-value num" data-out="advantage" data-fmt="currency">—</div>
+        <div class="results__headline-sub" id="rvb-headline-sub">Difference in net worth between the two paths.</div>
+      </div>
+
+      <div class="results__grid">
+        <div class="stat">
+          <div class="stat__label">Net worth — buying</div>
+          <div class="stat__value num" data-out="buyNetWorth" data-fmt="currency">—</div>
+          <div class="stat__note">equity after selling costs, plus savings</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Net worth — renting</div>
+          <div class="stat__value num" data-out="rentNetWorth" data-fmt="currency">—</div>
+          <div class="stat__note">invested down payment, plus savings</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Monthly cost to own</div>
+          <div class="stat__value num" data-out="buyMonth1" data-fmt="currency">—</div>
+          <div class="stat__note">year one, all-in</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Monthly cost to rent</div>
+          <div class="stat__value num" data-out="rentMonth1" data-fmt="currency">—</div>
+          <div class="stat__note">year one, all-in</div>
+        </div>
+      </div>
+
+      <div class="results__chart">
+        <Chart id="chart-rvb" height={220} label="Net worth over time"
+               caption="Both paths are given the same monthly budget; whoever pays less invests the difference." />
+      </div>
+
+      <div class="results__actions">
+        <button type="button" class="btn btn--primary" data-action="share">Copy shareable link</button>
+        <button type="button" class="btn" data-action="reset">Reset</button>
+      </div>
+    </div>
+
+    <div id="rvb-verdict" style="margin-top:var(--s-5)"></div>
+
+    <AdSlot unit="rvb-mid" variant="inline" />
+
+    <section class="prose" style="margin-top:var(--s-7)">
+      <h2>Why monthly payment is the wrong comparison</h2>
+      <p>
+        "My mortgage would be $2,400 and rent is $2,400, so buying is obviously
+        better" is the most common way people get this decision wrong. The mortgage
+        payment is not the cost of owning. It excludes property tax, insurance,
+        maintenance, HOA dues, and the transaction costs at both ends — and it
+        ignores the largest item of all, which never appears on any statement: the
+        return your down payment would have earned somewhere else.
+      </p>
+      <p>
+        On a $450,000 house with 20% down, that is $90,000 plus roughly $13,500 in
+        closing costs. A renter who does not buy has $103,500 to invest. At 7% over
+        ten years that stake alone grows to about $204,000. Any honest comparison
+        has to put that on the renter's side of the ledger, and most calculators
+        simply do not.
+      </p>
+
+      <h2>How this model works</h2>
+      <p>
+        Both paths are given the same money and run month by month for the horizon
+        you choose.
+      </p>
+      <ul>
+        <li>
+          <strong>The renter</strong> starts with the down payment and closing costs
+          invested at your assumed return. Rent grows at your assumed rate.
+        </li>
+        <li>
+          <strong>The buyer</strong> pays principal, interest, property tax,
+          insurance, maintenance and HOA. Property tax and maintenance scale with
+          the home's value, so they rise as it appreciates.
+        </li>
+        <li>
+          <strong>Whoever has the cheaper month invests the difference.</strong>
+          Early on that is usually the renter. Later, once rent has grown past a
+          fixed mortgage payment, it flips.
+        </li>
+        <li>
+          <strong>Net worth is measured as if you sold today</strong>, so the
+          buyer's equity is reduced by selling costs. This matters enormously in the
+          early years and is the main reason buying loses over short horizons.
+        </li>
+      </ul>
+
+      <h2>The inputs that actually decide it</h2>
+      <h3>How long you stay</h3>
+      <p>
+        This dominates everything else. Buying costs roughly 3% of the price going
+        in and 7% coming out — a 10% round trip that appreciation has to overcome
+        before you are even. Under about five years, buying loses in most markets
+        regardless of what rates do. Past ten, it usually wins. The break-even year
+        in the chart above is the single most useful number on this page.
+      </p>
+      <h3>Investment return versus appreciation</h3>
+      <p>
+        These two assumptions do more work than any other pair, and small changes
+        swing the answer hard. Long-run US home appreciation is around 3–4% nominal;
+        broad equity returns are around 7% nominal. Set both equal and buying wins
+        easily, because the mortgage leverages your down payment. Widen the gap and
+        renting closes in. Be honest here rather than optimistic — and try it both
+        ways before deciding.
+      </p>
+      <h3>Maintenance</h3>
+      <p>
+        The 1% of value per year rule is a reasonable long-run average and a poor
+        year-to-year predictor. Nothing happens for six years and then the roof and
+        the HVAC arrive together. Older houses run higher; a new build under warranty
+        runs lower for a while. Condos shift most of it into the HOA fee instead,
+        which is why a condo with a $500 HOA is not cheaper than a house — the money
+        moved line items.
+      </p>
+      <h3>Rent growth</h3>
+      <p>
+        This is the buyer's strongest argument and it compounds quietly. A fixed
+        mortgage payment stays flat for 30 years while rent tracks inflation. At 3%
+        growth, $2,400 rent becomes $3,225 in ten years and $4,336 in twenty. The
+        buyer's principal and interest never move. Only the tax and insurance
+        portions rise.
+      </p>
+
+      <h2>What this model leaves out</h2>
+      <p>Deliberately, because including them would require guessing about you:</p>
+      <ul>
+        <li>
+          <strong>The mortgage interest deduction.</strong> Since the 2017 standard
+          deduction increase, roughly 90% of households take the standard deduction
+          and get no benefit from mortgage interest at all. Including it by default
+          would overstate the case for buying for almost everyone. If you are
+          confident you will itemize, reduce your effective mortgage rate by roughly
+          your marginal tax rate to approximate it.
+        </li>
+        <li>
+          <strong>PMI.</strong> Below 20% down you will pay mortgage insurance,
+          typically 0.5–1.5% of the loan annually, until you reach 20% equity. Add it
+          to the insurance field if you are putting less down.
+        </li>
+        <li>
+          <strong>The capital gains exclusion.</strong> Up to $250,000 of gain
+          ($500,000 married filing jointly) is tax-free on a primary residence you
+          have lived in for two of the last five years. Investment gains are taxed.
+          Over long horizons in appreciating markets this favours buying, and this
+          model does not credit it.
+        </li>
+        <li>
+          <strong>Everything that is not money.</strong> Control over your own
+          space, security of tenure, the freedom to leave in 30 days, the risk of a
+          landlord selling. These are real and they are not on the chart.
+        </li>
+      </ul>
+
+      <h2>Common questions</h2>
+      <dl class="faq">
+        <dt>What if I can't decide between two cities?</dt>
+        <dd>
+          Run it once per city with local property tax rates and rents — those vary
+          far more than mortgage rates do. A 2.2% property tax state changes the
+          answer completely versus a 0.5% state on the same house price.
+        </dd>
+        <dt>Is buying always better long term?</dt>
+        <dd>
+          No. In expensive coastal markets the price-to-rent ratio can be high enough
+          that renting and investing the difference wins even over 20 years. That is
+          exactly the case this calculator exists to catch — if renting wins at your
+          numbers, that is a real result, not a bug.
+        </dd>
+        <dt>Should I include utilities?</dt>
+        <dd>
+          Only the difference. If you would pay water and trash as an owner but they
+          are included in your rent, add the gap to the HOA field. Utilities that are
+          the same either way cancel out.
+        </dd>
+      </dl>
+    </section>
+
+    <RelatedTools items={related} />
+  </ToolShell>
+</BaseLayout>
+
+<script>
+  import { mount } from '@kit/calc/engine';
+  import { lineChart } from '@kit/calc/chart';
+  import { currency, currencyCompact } from '@kit/calc/format';
+  import { FIELDS, compute } from '../../lib/tools/rent-vs-buy';
+  import type { RvBModel } from '../../lib/tools/rent-vs-buy';
+
+  document.getElementById('rvb-form')?.addEventListener('submit', (e) => e.preventDefault());
+
+  mount<RvBModel>({
+    id: 'rvb',
+    fields: FIELDS,
+    compute,
+    debounceMs: 110,
+    onRender(m) {
+      const el = document.getElementById('chart-rvb');
+      if (el) {
+        lineChart(el, {
+          series: [
+            { name: 'Buying', color: 'var(--c-series-1)', points: m.buySeries },
+            { name: 'Renting', color: 'var(--c-series-3)', points: m.rentSeries },
+          ],
+          yFormat: currencyCompact,
+          xFormat: (i) => `Year ${((i + 1) * 3 / 12).toFixed(1)}`,
+          xTicks: rvbTicks(m.buySeries.length, m.years),
+          crosshair: true,
+          height: 220,
+        });
+      }
+
+      const sub = document.getElementById('rvb-headline-sub');
+      if (sub) {
+        sub.textContent = m.buyerWins
+          ? `Buying comes out ahead by this much after ${m.years} years.`
+          : `Renting and investing the difference comes out ahead by this much.`;
+      }
+
+      const verdict = document.getElementById('rvb-verdict');
+      if (!verdict) return;
+      const be = m.breakEvenYear;
+      if (m.buyerWins && be !== null) {
+        verdict.innerHTML = note(false, `Buying overtakes renting at year ${be}`,
+          `Before that point the transaction costs and the renter's invested down payment keep renting ahead. After it, a fixed payment against rising rent does the work. You are modelling ${m.years} years, which is past the crossover.`);
+      } else if (!m.buyerWins && be !== null) {
+        verdict.innerHTML = note(true, `Buying does not overtake renting within ${m.years} years`,
+          `The crossover happens around year ${be}, past your horizon. On these assumptions renting and investing the difference leaves you about ${currency(Math.abs(m.advantage))} ahead.`);
+      } else {
+        verdict.innerHTML = note(true, `Renting wins across the whole period`,
+          `Buying never overtakes renting within ${m.years} years at these numbers — about ${currency(Math.abs(m.advantage))} behind at the end. The usual causes are a high price-to-rent ratio, low appreciation, or an investment return well above appreciation.`);
+      }
+    },
+  });
+
+  function note(warn: boolean, title: string, body: string) {
+    return `<div class="note${warn ? ' note--warn' : ''}"><strong class="note__title">${title}</strong><p>${body}</p></div>`;
+  }
+
+  function rvbTicks(n: number, years: number) {
+    const step = Math.max(1, Math.round(n / Math.min(years, 8)));
+    const out: Array<{ at: number; label: string }> = [];
+    for (let i = 0; i < n; i += step) out.push({ at: i, label: `Y${Math.round((i + 1) * 3 / 12)}` });
+    return out;
+  }
+</script>

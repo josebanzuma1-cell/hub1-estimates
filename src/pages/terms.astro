@@ -1,0 +1,56 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE } from '../lib/site';
+const title = `Terms of Use | ${SITE.name}`;
+const description = 'Terms governing use of the calculators and content on this site.';
+const canonical = '/terms';
+const updated = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+---
+<BaseLayout {title} {description} {canonical}>
+  <div class="page">
+    <div class="tool-hero"><h1>Terms of use</h1><p>Last updated {updated}.</p></div>
+    <section class="prose">
+      <h2>Not financial advice</h2>
+      <p>
+        Everything on this site is general information and estimation tooling. It is
+        not financial, tax, legal or investment advice, and no relationship of trust
+        or reliance is created by using it. We are not a lender, a broker, a licensed
+        advisor or a tax professional.
+      </p>
+      <p>
+        Decisions about a mortgage, a refinance, or a property purchase should be
+        made with a licensed professional who knows your circumstances and can see
+        your actual loan documents.
+      </p>
+
+      <h2>Accuracy</h2>
+      <p>
+        Calculators produce estimates from the assumptions you supply and from
+        defaults that may be out of date or inapplicable to you. Actual figures from
+        a lender will differ. State and local data on this site is compiled from
+        public sources, may contain errors, and portions are explicitly marked as
+        unverified. Verify anything you intend to act on against a primary source.
+      </p>
+      <p>
+        We make no warranty that the content is accurate, current or complete, and we
+        accept no liability for any loss arising from reliance on it.
+      </p>
+
+      <h2>Acceptable use</h2>
+      <p>
+        You may use these tools for personal and professional purposes, including
+        sharing result links. You may not scrape the site at volume, republish its
+        content wholesale, or present its output as your own product.
+      </p>
+
+      <h2>External links</h2>
+      <p>
+        Links to third-party sites are provided for convenience. We do not control
+        and are not responsible for their content or practices.
+      </p>
+
+      <h2>Changes</h2>
+      <p>These terms may be updated at any time. Continued use constitutes acceptance of the current version.</p>
+    </section>
+  </div>
+</BaseLayout>

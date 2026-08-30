@@ -1,0 +1,112 @@
+---
+/* The closing cost calculator, shared by /tools/closing-cost-calculator and
+   every /closing-costs/[state] page. The state row is serialised into the page
+   so the island can build a state-aware compute() without a network call. */
+import ToolShell from '@kit/components/ToolShell.astro';
+import Field from '@kit/components/Field.astro';
+import Segmented from '@kit/components/Segmented.astro';
+import AdSlot from '@kit/components/AdSlot.astro';
+import DataNote from '@kit/components/DataNote.astro';
+import { D } from '../lib/tools/closing-costs';
+import type { StateData } from '@data/types';
+
+interface Props {
+  state?: StateData | null;
+  title: string;
+  intro: string;
+  breadcrumbs: Array<{ href?: string; label: string }>;
+  defaultPrice?: number;
+}
+const { state = null, title, intro, breadcrumbs, defaultPrice } = Astro.props;
+const price = defaultPrice ?? (D.price as number);
+---
+<ToolShell {title} {intro} {breadcrumbs} adSlotTop="cc-top" adSlotResults="cc-results" calcId="cc">
+  <form slot="controls" id="cc-form">
+    <Field name="price" label="Purchase price" affix="currency" value={price}
+           min={10000} max={20000000} step={5000}
+           slider sliderMin={50000} sliderMax={2000000} sliderStep={5000} />
+    <div class="field-grid field-grid--2">
+      <Field name="down" label="Down payment" affix="percent" value={D.down} min={0} max={100} step={1} />
+      <Field name="rate" label="Interest rate" affix="percent" value={D.rate} min={0} max={25} step={0.125} />
+    </div>
+    <div class="field-grid field-grid--2">
+      <Field name="orig" label="Origination fee" affix="percent" value={D.orig} hint="of loan" min={0} max={5} step={0.125} />
+      <Field name="points" label="Discount points" affix="percent" value={D.points} hint="optional" min={0} max={5} step={0.125} />
+    </div>
+    <Segmented name="owners" label="Owner's title policy" value={D.owners ? '1' : '0'}
+               options={[{ value: '1', label: 'Include' }, { value: '0', label: 'Skip' }]} />
+  </form>
+
+  <div slot="results" class="results">
+    <div class="results__headline">
+      <div class="results__headline-label">Estimated closing costs</div>
+      <div class="results__headline-value num" data-out="total" data-fmt="currency">—</div>
+      <div class="results__headline-sub">
+        About <span data-out="totalPct" data-fmt="percent1">—</span> of the purchase price,
+        excluding your down payment.
+      </div>
+    </div>
+    <div class="results__grid results__grid--3">
+      <div class="stat">
+        <div class="stat__label">Lender</div>
+        <div class="stat__value num" data-out="lenderTotal" data-fmt="currency">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat__label">Title &amp; settlement</div>
+        <div class="stat__value num" data-out="titleTotal" data-fmt="currency">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat__label">Government</div>
+        <div class="stat__value num" data-out="govTotal" data-fmt="currency">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat__label">Prepaid &amp; escrow</div>
+        <div class="stat__value num" data-out="prepaidTotal" data-fmt="currency">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat__label">Down payment</div>
+        <div class="stat__value num" data-out="downPayment" data-fmt="currency">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat__label">Total cash to close</div>
+        <div class="stat__value num" data-out="cashToClose" data-fmt="currency">—</div>
+      </div>
+    </div>
+    <div class="results__chart">
+      <p style="font-size:var(--t-sm);color:var(--c-ink-2);margin:0">
+        <strong style="color:var(--c-accent)"><span data-out="shoppableTotal" data-fmt="currency">—</span></strong>
+        of this is shoppable — services you are allowed to choose yourself rather
+        than accept from the lender's list.
+      </p>
+    </div>
+    <div class="results__actions">
+      <button type="button" class="btn btn--primary" data-action="share">Copy shareable link</button>
+      <button type="button" class="btn" data-action="reset">Reset</button>
+    </div>
+  </div>
+
+  <section style="margin-top:var(--s-7)">
+    <div class="section-head">
+      <h2>Line-by-line breakdown</h2>
+      <p>Items marked shoppable are ones you may choose a provider for. On a real Loan Estimate these appear in Section C.</p>
+    </div>
+    <div id="cc-breakdown" class="table-wrap"><table class="data"><tbody><tr><td>Calculating…</td></tr></tbody></table></div>
+  </section>
+
+  {state && (
+    <div style="margin-top:var(--s-5)">
+      <DataNote
+        source={state.source}
+        updated={undefined}
+        verified={state.verified}
+        note={state.transferTaxNote}
+      />
+    </div>
+  )}
+
+  <AdSlot unit="cc-mid" variant="inline" />
+
+  <slot />
+</ToolShell>
+
+<script is:inline type="application/json" id="cc-state" set:html={JSON.stringify(state)} />

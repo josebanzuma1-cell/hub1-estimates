@@ -1,0 +1,155 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ClosingCostTool from '../../components/ClosingCostTool.astro';
+import RelatedTools from '@kit/components/RelatedTools.astro';
+import { SITE, toolBySlug, toolsExcept } from '../../lib/site';
+import { STATES } from '@data/states';
+
+const tool = toolBySlug('closing-cost-calculator')!;
+const canonical = `/tools/${tool.slug}`;
+const title = `Closing Cost Calculator — Full Line-by-Line Estimate | ${SITE.name}`;
+const description =
+  'Estimate buyer closing costs broken into lender, title, government and ' +
+  'prepaid items, with transfer tax and recording fees for your state.';
+
+const schema = [{
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE.url },
+    { '@type': 'ListItem', position: 2, name: 'Calculators', item: `${SITE.url}/tools` },
+    { '@type': 'ListItem', position: 3, name: tool.nav, item: `${SITE.url}${canonical}` },
+  ],
+}];
+
+const related = toolsExcept(tool.slug).slice(0, 3).map((t) => ({
+  href: `/tools/${t.slug}`, title: t.title, desc: t.blurb,
+}));
+---
+<BaseLayout {title} {description} {canonical} {schema}>
+  <ClosingCostTool
+    state={null}
+    title="Closing Cost Calculator"
+    intro="Every line a buyer pays at closing, grouped the way a Loan Estimate groups them — so you can see which items you are allowed to shop for and which you are not."
+    breadcrumbs={[{ href: '/', label: 'Home' }, { href: '/tools', label: 'Calculators' }, { label: tool.nav }]}
+  >
+    <section style="margin-top:var(--s-7)">
+      <div class="section-head">
+        <h2>Closing costs by state</h2>
+        <p>Transfer taxes and recording fees are set locally and vary enormously — from nothing at all in fourteen states to 4% of the price in Delaware. Pick your state for local figures.</p>
+      </div>
+      <div class="chip-row">
+        {STATES.map((st) => <a class="chip" href={`/closing-costs/${st.slug}`}>{st.name}</a>)}
+      </div>
+    </section>
+
+    <section class="prose" style="margin-top:var(--s-7)">
+      <h2>What closing costs actually are</h2>
+      <p>
+        Closing costs are every charge that lands between an accepted offer and the
+        keys, excluding the down payment itself. For a buyer they typically run 2%
+        to 5% of the purchase price — a range wide enough to be nearly useless,
+        which is why the breakdown above matters more than the total.
+      </p>
+      <p>
+        The federal Loan Estimate splits these into sections for a reason, and the
+        distinction is the single most useful thing to understand: some charges are
+        fixed by the lender or the government, and some are services you may choose
+        a provider for. Only the second group is negotiable, and it is usually worth
+        $1,000 to $2,500.
+      </p>
+
+      <h2>The four buckets</h2>
+      <h3>Lender fees</h3>
+      <p>
+        Origination, underwriting, processing, appraisal, credit report. These are
+        set by the lender, and you cannot negotiate them down within a single
+        lender — but they vary a great deal between lenders. This is why the useful
+        move is to collect three Loan Estimates and compare section A across them,
+        rather than arguing with one loan officer about a $200 processing fee.
+      </p>
+      <h3>Title and settlement</h3>
+      <p>
+        The lender's title policy is mandatory. The owner's policy is optional and
+        you should almost always buy it — a one-time premium that protects your
+        ownership against defects, forged deeds and missed heirs for as long as you
+        own the property. It is also the largest genuinely shoppable line on the
+        statement. In most states you may choose your own title company; in a few,
+        premiums are state-regulated and identical everywhere, in which case shop
+        the settlement fee instead.
+      </p>
+      <h3>Government charges</h3>
+      <p>
+        Recording fees and transfer taxes. Fixed by statute, entirely non-negotiable,
+        and the reason the same house costs thousands more to buy in one state than
+        another. Fourteen states impose no transfer tax at all; Delaware charges 4%.
+        Who customarily pays is convention rather than law, and it is genuinely
+        negotiable in a slow market.
+      </p>
+      <h3>Prepaid items and escrow</h3>
+      <p>
+        These are not fees. Prepaid interest covers the days between closing and the
+        end of the month. The escrow deposit funds an account that pays your taxes
+        and insurance when they come due — it is your money, held on your behalf,
+        and refunded if you sell or refinance. Treat it as a cash flow requirement,
+        not a cost, when you compare lenders.
+      </p>
+
+      <h2>How to actually reduce them</h2>
+      <ul>
+        <li><strong>Shop the title company.</strong> The largest single controllable line. Quotes for identical coverage routinely differ by $800 or more.</li>
+        <li><strong>Ask for a reissue rate.</strong> If the property changed hands in the last ten years, the owner's policy often qualifies for a discount of 20–40%. It is rarely offered unprompted.</li>
+        <li><strong>Negotiate seller credits.</strong> In a buyer's market, asking the seller to cover 2–3% toward closing costs is routine and often easier than a price reduction, since it costs the seller the same and helps you more.</li>
+        <li><strong>Close near the end of the month.</strong> Prepaid interest is charged daily to month end. Closing on the 28th instead of the 3rd saves most of a month's interest — though your first full payment then arrives sooner.</li>
+        <li><strong>Compare Loan Estimates on the same day.</strong> Rates and credits move; quotes from different weeks are not comparable.</li>
+      </ul>
+      <div class="callout">
+        <strong>The lender cannot surprise you.</strong> Charges in section A of the
+        Loan Estimate may not increase at all between estimate and closing, and
+        section C items may not rise more than 10% in aggregate if you use a
+        provider from the lender's written list. If the Closing Disclosure exceeds
+        those tolerances, the lender owes you the difference. Compare the two
+        documents line by line before you sign.
+      </div>
+    </section>
+
+    <section class="prose">
+      <h2>Common questions</h2>
+      <dl class="faq">
+        <dt>Can closing costs be rolled into the loan?</dt>
+        <dd>
+          On a purchase, generally no — that is what seller credits are for. On a
+          refinance, yes, though you then pay interest on them for the life of the
+          loan. The <a href="/tools/refinance-break-even-calculator">refinance
+          break-even calculator</a> models that directly.
+        </dd>
+        <dt>Do I pay closing costs if I pay cash?</dt>
+        <dd>
+          Yes, but far less. Everything in the lender bucket disappears, along with
+          prepaid interest and escrow. You still owe title, settlement, recording and
+          any transfer tax — typically about 1% of the price rather than 3%.
+        </dd>
+        <dt>Why is my estimate higher than this calculator?</dt>
+        <dd>
+          Usually HOA transfer fees, a survey requirement, a second appraisal, or
+          local charges that exist in one county and nowhere else. Compare against
+          your actual Loan Estimate and treat any line you do not recognise as a
+          question for the lender.
+        </dd>
+        <dt>Who chooses the title company?</dt>
+        <dd>
+          You do, in most states, and federal law prohibits a seller from requiring
+          you to use a particular one as a condition of sale. Lenders provide a list
+          of providers they will accept; using someone off that list is allowed but
+          removes the 10% tolerance protection.
+        </dd>
+      </dl>
+    </section>
+
+    <RelatedTools items={related} />
+  </ClosingCostTool>
+</BaseLayout>
+
+<script>
+  import '../../scripts/cc-island';
+</script>

@@ -1,0 +1,81 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE } from '../lib/site';
+const title = `How We Calculate | ${SITE.name}`;
+const description = 'The formulas, assumptions and data sources behind every calculator on this site.';
+const canonical = '/methodology';
+---
+<BaseLayout {title} {description} {canonical}>
+  <div class="page">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span aria-hidden="true">/</span><span aria-current="page">How we calculate</span>
+    </nav>
+    <div class="tool-hero"><h1>How we calculate</h1>
+      <p>Every formula, every default, and everything each model deliberately leaves out.</p>
+    </div>
+    <section class="prose">
+      <h2>Core formulas</h2>
+      <p>All payment figures come from the standard level-payment annuity formula:</p>
+      <div class="formula">M = P × [ r(1 + r)ⁿ ] / [ (1 + r)ⁿ − 1 ]</div>
+      <p>
+        where P is principal, r is the monthly rate (annual ÷ 12) and n is the number
+        of payments. Amortization schedules are generated iteratively rather than
+        from a closed form, because extra principal payments alter the balance path
+        and therefore every subsequent interest charge.
+      </p>
+      <p>
+        Where a tool compares two options, it compares <strong>net position</strong>:
+        total cash paid out plus debt still outstanding at each point in time.
+        Comparing monthly payments alone silently rewards whichever option has the
+        longer term, which is why a reset 30-year refinance looks better than it is.
+      </p>
+
+      <h2>Defaults</h2>
+      <p>
+        Defaults are illustrative starting points, not forecasts or recommendations.
+        Rates, prices and growth assumptions shipped with each calculator are chosen
+        to be plausible rather than current. Replace every one of them with your own
+        figures — the defaults exist so the page renders something meaningful before
+        you type, not because we think they apply to you.
+      </p>
+
+      <h2>Data sources</h2>
+      <p>
+        State-level transfer taxes, recording fees and attorney requirements are
+        compiled from state departments of revenue and published closing-custom
+        tables. Property tax rates derive from Census ACS median tax and median value
+        figures. Insurance averages come from NAIC reporting. Metro prices, incomes
+        and rents come from Census ACS tables.
+      </p>
+      <div class="note note--warn">
+        <strong class="note__title">Verification status</strong>
+        The state and metro data sets currently ship as seeded estimates and are
+        marked as unverified on every page that uses them. They have not yet been
+        checked against primary sources. Do not rely on them for a transaction.
+      </div>
+
+      <h2>What the models exclude</h2>
+      <ul>
+        <li><strong>Taxes.</strong> All figures are pre-tax. Mortgage interest deductibility, depreciation on rentals, capital gains treatment and depreciation recapture are excluded, because each depends on circumstances a calculator cannot know.</li>
+        <li><strong>Rate variability.</strong> Fixed rates are held constant; variable rates (HELOCs, ARMs) are modelled at the rate you enter and do not simulate movement.</li>
+        <li><strong>Lender-specific pricing.</strong> Points, credits, and loan-level price adjustments vary by lender and credit profile.</li>
+        <li><strong>Sequence risk.</strong> Investment returns are applied as a smooth annual rate. Real returns arrive unevenly, and the order matters.</li>
+      </ul>
+
+      <h2>Rounding</h2>
+      <p>
+        Calculations run at full floating-point precision and are rounded only for
+        display. Totals may therefore differ by a cent or two from the sum of the
+        displayed rows. Final payments in an amortization schedule are approximate,
+        as servicers apply their own day-count and rounding conventions.
+      </p>
+
+      <h2>Corrections</h2>
+      <p>
+        If a figure here disagrees with a source you trust, the source is more likely
+        to be right. These tools are estimates for orientation, not statements of
+        fact about your transaction.
+      </p>
+    </section>
+  </div>
+</BaseLayout>

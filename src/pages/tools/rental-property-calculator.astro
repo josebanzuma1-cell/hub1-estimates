@@ -1,0 +1,391 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ToolShell from '@kit/components/ToolShell.astro';
+import Field from '@kit/components/Field.astro';
+import Chart from '@kit/components/Chart.astro';
+import AdSlot from '@kit/components/AdSlot.astro';
+import RelatedTools from '@kit/components/RelatedTools.astro';
+import { SITE, toolBySlug, toolsExcept } from '../../lib/site';
+import { D } from '../../lib/tools/rental';
+
+const tool = toolBySlug('rental-property-calculator')!;
+const canonical = `/tools/${tool.slug}`;
+const title = `Rental Property Calculator — Cap Rate, Cash-on-Cash, DSCR | ${SITE.name}`;
+const description =
+  'Analyse a rental deal properly: cap rate, cash-on-cash return, DSCR, ' +
+  'break-even occupancy and a ten-year pro forma with IRR.';
+
+const schema = [{
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE.url },
+    { '@type': 'ListItem', position: 2, name: 'Calculators', item: `${SITE.url}/tools` },
+    { '@type': 'ListItem', position: 3, name: tool.nav, item: `${SITE.url}${canonical}` },
+  ],
+}];
+
+const related = toolsExcept(tool.slug).slice(0, 3).map((t) => ({
+  href: `/tools/${t.slug}`, title: t.title, desc: t.blurb,
+}));
+---
+<BaseLayout {title} {description} {canonical} {schema}>
+  <ToolShell
+    title="Rental Property Calculator"
+    intro="Cap rate, cash-on-cash and DSCR from the same set of inputs, plus a ten-year pro forma. The reserves most spreadsheets omit — vacancy, maintenance and capital expenditure — are included by default, because leaving them out is how a deal looks profitable until the roof goes."
+    breadcrumbs={[{ href: '/', label: 'Home' }, { href: '/tools', label: 'Calculators' }, { label: tool.nav }]}
+    adSlotTop="rp-top"
+    adSlotResults="rp-results"
+    calcId="rp"
+  >
+    <form slot="controls" id="rp-form">
+      <div class="fieldset">
+        <legend>Acquisition</legend>
+        <Field name="price" label="Purchase price" affix="currency" value={D.price}
+               min={10000} max={50000000} step={1000}
+               slider sliderMin={50000} sliderMax={1500000} sliderStep={5000} />
+        <div class="field-grid field-grid--2">
+          <Field name="down" label="Down payment" affix="percent" value={D.down} min={0} max={100} step={1} />
+          <Field name="rate" label="Interest rate" affix="percent" value={D.rate} min={0} max={25} step={0.125} />
+        </div>
+        <div class="field-grid field-grid--2">
+          <Field name="close" label="Closing costs" affix="currency" value={D.close} min={0} max={500000} step={250} />
+          <Field name="rehab" label="Initial repairs" affix="currency" value={D.rehab} min={0} max={2000000} step={500} />
+        </div>
+        <Field name="term" label="Loan term (years)" value={D.term} min={1} max={50} step={5} />
+      </div>
+
+      <div class="fieldset">
+        <legend>Income</legend>
+        <Field name="rent" label="Monthly rent" affix="currency" value={D.rent}
+               min={0} max={200000} step={25}
+               slider sliderMin={500} sliderMax={10000} sliderStep={25} />
+        <div class="field-grid field-grid--2">
+          <Field name="other" label="Other income" affix="currency" value={D.other} hint="per month" min={0} max={50000} step={25} />
+          <Field name="vac" label="Vacancy" affix="percent" value={D.vac} hint="of gross rent" min={0} max={50} step={0.5} />
+        </div>
+      </div>
+
+      <div class="fieldset">
+        <legend>Operating expenses</legend>
+        <div class="field-grid field-grid--2">
+          <Field name="tax" label="Property tax" affix="percent" value={D.tax} hint="of value / yr" min={0} max={10} step={0.05} />
+          <Field name="ins" label="Insurance" affix="currency" value={D.ins} hint="per year" min={0} max={200000} step={100} />
+        </div>
+        <div class="field-grid field-grid--2">
+          <Field name="hoa" label="HOA" affix="currency" value={D.hoa} hint="per month" min={0} max={5000} step={25} />
+          <Field name="util" label="Owner-paid utilities" affix="currency" value={D.util} hint="per month" min={0} max={10000} step={25} />
+        </div>
+        <div class="field-grid field-grid--2">
+          <Field name="maint" label="Maintenance" affix="percent" value={D.maint} hint="of rent" min={0} max={40} step={0.5} />
+          <Field name="capex" label="CapEx reserve" affix="percent" value={D.capex} hint="of rent" min={0} max={40} step={0.5} />
+        </div>
+        <Field name="mgmt" label="Property management" affix="percent" value={D.mgmt} hint="of rent — set to 0 if self-managing" min={0} max={25} step={0.5} />
+      </div>
+
+      <div class="fieldset">
+        <legend>Projection</legend>
+        <div class="field-grid field-grid--2">
+          <Field name="rgrow" label="Rent growth" affix="percent" value={D.rgrow} hint="per year" min={-10} max={20} step={0.25} />
+          <Field name="egrow" label="Expense growth" affix="percent" value={D.egrow} hint="per year" min={-10} max={20} step={0.25} />
+        </div>
+        <div class="field-grid field-grid--2">
+          <Field name="appr" label="Appreciation" affix="percent" value={D.appr} hint="per year" min={-10} max={20} step={0.25} />
+          <Field name="sell" label="Cost to sell" affix="percent" value={D.sell} min={0} max={20} step={0.5} />
+        </div>
+        <Field name="hold" label="Hold period (years)" value={D.hold} min={1} max={40} step={1} />
+      </div>
+    </form>
+
+    <div slot="results" class="results">
+      <div class="results__headline">
+        <div class="results__headline-label">Cash flow, year one</div>
+        <div class="results__headline-value num" data-out="monthlyCashFlow" data-fmt="currency2">—</div>
+        <div class="results__headline-sub">
+          Per month, after debt service and every reserve.
+        </div>
+      </div>
+
+      <div class="results__grid results__grid--3">
+        <div class="stat">
+          <div class="stat__label">Cap rate</div>
+          <div class="stat__value num" data-out="capRate" data-fmt="percent">—</div>
+          <div class="stat__note">unlevered</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Cash-on-cash</div>
+          <div class="stat__value num" data-out="cashOnCash" data-fmt="percent" data-sign>—</div>
+          <div class="stat__note">levered, year one</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">DSCR</div>
+          <div class="stat__value num" data-out="dscr" data-fmt="number2">—</div>
+          <div class="stat__note">lenders want 1.20+</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">NOI</div>
+          <div class="stat__value num" data-out="noi" data-fmt="currency">—</div>
+          <div class="stat__note">annual, before debt</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Cash invested</div>
+          <div class="stat__value num" data-out="totalCashInvested" data-fmt="currency">—</div>
+          <div class="stat__note">down + closing + rehab</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Break-even occupancy</div>
+          <div class="stat__value num" data-out="breakEvenOccupancy" data-fmt="percent0">—</div>
+          <div class="stat__note">to cover all costs</div>
+        </div>
+      </div>
+
+      <div class="results__chart">
+        <Chart id="chart-rp" height={210} label="Equity and annual cash flow"
+               caption="Equity combines principal paydown and appreciation." />
+      </div>
+
+      <div class="results__actions">
+        <button type="button" class="btn btn--primary" data-action="share">Copy shareable link</button>
+        <button type="button" class="btn" data-action="reset">Reset</button>
+      </div>
+    </div>
+
+    <div id="rp-verdict" style="margin-top:var(--s-5)"></div>
+
+    <AdSlot unit="rp-mid" variant="inline" />
+
+    <section style="margin-top:var(--s-7)">
+      <div class="section-head">
+        <h2>Ten-year pro forma</h2>
+        <p>Rent and expenses grow at the rates you set. The final year includes net sale proceeds in the return.</p>
+      </div>
+      <div class="table-wrap" style="max-height:520px;overflow-y:auto">
+        <table class="data" id="rp-table">
+          <thead>
+            <tr>
+              <th>Year</th><th>Gross rent</th><th>Effective</th><th>OpEx</th>
+              <th>NOI</th><th>Debt</th><th>Cash flow</th><th>Equity</th>
+            </tr>
+          </thead>
+          <tbody><tr><td colspan="8" style="text-align:center;color:var(--c-ink-3)">Calculating…</td></tr></tbody>
+        </table>
+      </div>
+      <div class="results__grid" style="margin-top:var(--s-4);border:1px solid var(--c-line);border-radius:var(--r-md);border-top:1px solid var(--c-line)">
+        <div class="stat">
+          <div class="stat__label">Net sale proceeds</div>
+          <div class="stat__value num" data-out="saleProceeds" data-fmt="currency">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Total profit</div>
+          <div class="stat__value num" data-out="totalProfit" data-fmt="currency" data-sign>—</div>
+        </div>
+        <div class="stat" style="border-bottom:0">
+          <div class="stat__label">IRR over the hold</div>
+          <div class="stat__value num" data-out="irrPct" data-fmt="percent">—</div>
+        </div>
+        <div class="stat" style="border-bottom:0">
+          <div class="stat__label">Gross rent multiplier</div>
+          <div class="stat__value num" data-out="grm" data-fmt="number1">—</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="prose" style="margin-top:var(--s-7)">
+      <h2>The four numbers, and what each one is for</h2>
+      <h3>Cap rate</h3>
+      <div class="formula">Cap rate = Net operating income ÷ Purchase price</div>
+      <p>
+        Cap rate deliberately ignores your mortgage. It describes the property, not
+        the deal — what the building yields if you paid cash. That is exactly why it
+        is the number used to compare two properties against each other, and why
+        comparing your cap rate to someone else's only means something if you both
+        computed NOI the same way.
+      </p>
+      <p>
+        There is no universally good cap rate. It is a price signal: low cap rates
+        mean expensive markets with expected appreciation, high cap rates mean cheap
+        markets with more risk. A 4% cap in a coastal metro and a 9% cap in a
+        declining small city can both be rational, and both can be mistakes.
+      </p>
+
+      <h3>Cash-on-cash return</h3>
+      <div class="formula">Cash-on-cash = Annual pre-tax cash flow ÷ Total cash invested</div>
+      <p>
+        This is the investor number. It answers what your actual money earned in a
+        year, and unlike cap rate it depends entirely on financing. Put less down
+        and cash-on-cash rises as long as the property still covers its debt —
+        that is leverage working. It also falls off a cliff when the deal stops
+        covering debt, which is leverage working in the other direction.
+      </p>
+
+      <h3>DSCR</h3>
+      <div class="formula">DSCR = Net operating income ÷ Annual debt service</div>
+      <p>
+        Debt service coverage ratio is how a lender decides whether the property can
+        carry the loan on its own. Below 1.0 the building does not cover its own
+        mortgage. Most commercial and DSCR lenders want 1.20 to 1.25 as a minimum,
+        which means 20–25% more income than the debt requires. If you are using a
+        DSCR loan — where qualification rests on the property rather than your
+        personal income — this is the number that decides approval.
+      </p>
+
+      <h3>Break-even occupancy</h3>
+      <p>
+        The occupancy rate at which income exactly covers operating expenses and
+        debt service. It converts every other assumption into one intuitive
+        question: how empty can this sit before it costs me money? Below about 85%
+        is comfortable. Above 95% means one bad tenant turns the year negative.
+      </p>
+
+      <h2>The expenses people leave out</h2>
+      <p>
+        The most common way a deal analysis goes wrong is not a wrong number, it is a
+        missing one. These three are the usual omissions, and all three are on by
+        default here:
+      </p>
+      <ul>
+        <li>
+          <strong>Vacancy.</strong> Nothing is occupied 100% of the time. Even a good
+          tenant moves out eventually, and turnover costs a month of rent plus paint
+          and cleaning. 5–8% is a reasonable planning figure in a stable market.
+        </li>
+        <li>
+          <strong>Capital expenditure.</strong> Roofs, HVAC systems, water heaters
+          and appliances have finite lives and large replacement costs. They do not
+          appear in any given year's expenses, which is precisely why they wreck
+          returns — a $12,000 roof in year seven erases several years of cash flow if
+          nothing was set aside. Reserving 5–10% of rent monthly is the discipline
+          that prevents it.
+        </li>
+        <li>
+          <strong>Management.</strong> Even self-managing, budget for it. Your time
+          is a real cost, and if the plan is ever to scale or to move away, the
+          8–10% fee arrives whether you modelled it or not. A deal that only works
+          when you manage it yourself is a job, not an investment.
+        </li>
+      </ul>
+      <div class="callout">
+        <strong>The 50% rule as a sanity check.</strong> Over a long enough period,
+        operating expenses on a single-family rental tend toward roughly half of
+        gross rent, excluding the mortgage. If your expense ratio comes out far below
+        that, look for what is missing rather than congratulating yourself.
+      </div>
+
+      <h2>Rules of thumb, and where they break</h2>
+      <p>
+        <strong>The 1% rule</strong> — monthly rent should be at least 1% of the
+        purchase price — is a screening filter, not an analysis. It was serviceable
+        when mortgage rates were 4%; at 7% the same 1% property no longer cash flows.
+        Use it to decide which listings deserve a full underwrite, then underwrite
+        them.
+      </p>
+      <p>
+        <strong>Gross rent multiplier</strong> (price ÷ annual gross rent) is cruder
+        still, because it ignores expenses entirely. A building with tenant-paid
+        utilities and one with owner-paid heat can have identical GRMs and completely
+        different returns. It is useful only for a first pass across similar
+        properties in one market.
+      </p>
+
+      <h2>What this model does not include</h2>
+      <ul>
+        <li><strong>Depreciation and taxes.</strong> Residential rental property depreciates over 27.5 years, which shelters a meaningful share of cash flow from tax. This model reports pre-tax figures throughout, so your after-tax return is usually better than shown — and depreciation recapture on sale usually makes the exit worse. Both effects are specific enough to your situation to need an accountant, not a calculator.</li>
+        <li><strong>Loan paydown as return.</strong> Principal reduction shows up in the equity column but not in cash-on-cash, which is correct — it is a real return you cannot spend until you sell or refinance. IRR captures it.</li>
+        <li><strong>Refinancing mid-hold.</strong> The pro forma assumes one loan held throughout.</li>
+      </ul>
+
+      <h2>Common questions</h2>
+      <dl class="faq">
+        <dt>Is negative cash flow ever acceptable?</dt>
+        <dd>
+          Sometimes, deliberately — in an appreciating market, with reserves deep
+          enough to fund the shortfall for years, and eyes open about the fact that
+          the return then depends entirely on appreciation. Accidental negative cash
+          flow, discovered after closing, is how most first rentals are lost.
+        </dd>
+        <dt>Should I use a 15-year loan?</dt>
+        <dd>
+          It builds equity far faster and usually destroys cash flow. On a rental the
+          conventional preference runs the other way from a primary residence: the
+          30-year keeps the cash flow that lets you buy the next property.
+        </dd>
+        <dt>Why is my cap rate different from the listing's?</dt>
+        <dd>
+          Listing cap rates are usually computed on pro forma rents with vacancy,
+          management and capital reserves excluded. Recompute from actuals — trailing
+          twelve months of real rent rolls and real expenses — before believing any
+          number in a marketing package.
+        </dd>
+      </dl>
+    </section>
+
+    <RelatedTools items={related} />
+  </ToolShell>
+</BaseLayout>
+
+<script>
+  import { mount } from '@kit/calc/engine';
+  import { lineChart } from '@kit/calc/chart';
+  import { currency, currencyCompact } from '@kit/calc/format';
+  import { FIELDS, compute } from '../../lib/tools/rental';
+  import type { RentalModel } from '../../lib/tools/rental';
+
+  document.getElementById('rp-form')?.addEventListener('submit', (e) => e.preventDefault());
+
+  mount<RentalModel>({
+    id: 'rp',
+    fields: FIELDS,
+    compute,
+    debounceMs: 100,
+    onRender(m) {
+      const el = document.getElementById('chart-rp');
+      if (el) {
+        lineChart(el, {
+          series: [
+            { name: 'Equity', color: 'var(--c-series-1)', points: m.equitySeries, fill: true },
+            { name: 'Annual cash flow', color: 'var(--c-series-2)', points: m.cashFlowSeries },
+          ],
+          yFormat: currencyCompact,
+          xFormat: (i) => `Year ${i + 1}`,
+          xTicks: m.equitySeries.map((_, i) => ({ at: i, label: `Y${i + 1}` }))
+            .filter((_, i) => i % Math.max(1, Math.ceil(m.equitySeries.length / 8)) === 0),
+          crosshair: true,
+          height: 210,
+        });
+      }
+
+      const body = document.querySelector('#rp-table tbody');
+      if (body) {
+        body.innerHTML = m.proForma.map((r) => `<tr>
+          <td>${r.year}</td>
+          <td>${currency(r.grossRent)}</td>
+          <td>${currency(r.effectiveIncome)}</td>
+          <td>${currency(r.operatingExpenses)}</td>
+          <td>${currency(r.noi)}</td>
+          <td>${currency(r.debtService)}</td>
+          <td style="color:${r.cashFlow < 0 ? 'var(--c-neg)' : 'var(--c-pos)'}">${currency(r.cashFlow)}</td>
+          <td>${currency(r.equity)}</td>
+        </tr>`).join('');
+      }
+
+      const verdict = document.getElementById('rp-verdict');
+      if (!verdict) return;
+      const issues: string[] = [];
+      const wins: string[] = [];
+
+      if (m.dscr < 1) issues.push(`<li><strong>DSCR of ${m.dscr.toFixed(2)}</strong> — the property does not cover its own debt service. Most lenders will decline this, and the shortfall comes out of your pocket every month.</li>`);
+      else if (m.dscr < 1.2) issues.push(`<li><strong>DSCR of ${m.dscr.toFixed(2)}</strong> is below the 1.20 most lenders require. Financing may be harder than you expect, and there is little margin for a bad year.</li>`);
+      else wins.push(`<li><strong>DSCR of ${m.dscr.toFixed(2)}</strong> clears the usual 1.20 lender threshold.</li>`);
+
+      if (m.monthlyCashFlow < 0) issues.push(`<li><strong>Negative cash flow of ${currency(Math.abs(m.monthlyCashFlow))} a month.</strong> That is ${currency(Math.abs(m.monthlyCashFlow) * 12)} a year out of pocket, and the return depends entirely on appreciation.</li>`);
+      if (m.breakEvenOccupancy > 95) issues.push(`<li><strong>Break-even occupancy of ${m.breakEvenOccupancy.toFixed(0)}%</strong> leaves almost no room. One vacancy turns the year negative.</li>`);
+      if (m.expenseRatio < 35) issues.push(`<li><strong>Operating expenses are only ${m.expenseRatio.toFixed(0)}% of income.</strong> That is low against the 50% long-run norm — check that vacancy, maintenance and capital reserves are all realistic.</li>`);
+      if (m.onePercentRule >= 1) wins.push(`<li>Rent is ${m.onePercentRule.toFixed(2)}% of price, clearing the 1% screening rule.</li>`);
+      if (m.irrPct !== null && m.irrPct > 12) wins.push(`<li>Projected IRR of ${m.irrPct.toFixed(1)}% over the hold, including sale proceeds.</li>`);
+
+      verdict.innerHTML =
+        (issues.length ? `<div class="note note--warn"><strong class="note__title">Things to look at</strong><ul style="margin:0;padding-left:1.1rem">${issues.join('')}</ul></div>` : '') +
+        (wins.length ? `<div class="note" style="margin-top:var(--s-3)"><strong class="note__title">Working in its favour</strong><ul style="margin:0;padding-left:1.1rem">${wins.join('')}</ul></div>` : '');
+    },
+  });
+</script>
