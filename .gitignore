@@ -5,3 +5,6 @@ dist/
 .env.production
 .DS_Store
 *.log
+
+# Local dev server config — contains an absolute machine path
+.claude/launch.json
