@@ -1,4 +1,4 @@
-| `--c-accent*`, `--c-deep*`, `--c-pop*` in `tokens.css` | The palette. `--c-deep` is the hero/header band, `--c-pop` the CTA that has to pop against it.# Porting this build to Hub 2
+# Porting this build to Hub 2
 
 Each hub is its own workspace and its own repo. The reusable half is
 `src/kit/` — copy that one folder and you inherit the design system, the
@@ -37,7 +37,7 @@ Also copy `scripts/check-data.mjs` if the hub has programmatic data.
 | `src/pages/**` | Page shells and prose. |
 | `src/data/*` | Programmatic data sets. |
 | `src/layouts/BaseLayout.astro` | Footer links and JSON-LD. Structure stays. |
-| `--c-accent*`, `--c-deep*`, `--c-lime*` in `tokens.css` | The palette. `--c-deep` is the hero/header band, `--c-lime` the CTA that has to pop against it. Changing these three families re-skins a hub entirely. |
+| `--c-accent*`, `--c-deep*`, `--c-pop*` in `tokens.css` | The palette. `--c-deep` is the hero/header band, `--c-pop` the CTA that has to pop against it.
 | `src/kit/components/Logo.astro`, `public/favicon.svg` | The mark. It fills from `--c-accent`, so the SVG only needs redrawing if the hub wants a different symbol. |
 
 ## The pattern for a new calculator
@@ -138,3 +138,9 @@ The `.trust` strip carries **verifiable properties of the product only** —
 counts, guarantees you actually make. No ratings, no review counts, no
 testimonials. Comparison sites lean hard on social proof; inventing it is how a
 site loses the trust the strip is there to build.
+
+5. **Don't use `perl -0pi -e 's|...|...|'` on markdown tables.** The `|`
+   delimiter terminates at the first pipe in the replacement, silently
+   truncating it and fusing the remainder into the next line. It corrupted this
+   file's heading twice. Use `node -e` with explicit string ops for anything
+   containing pipes.
