@@ -3,7 +3,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import ToolShell from '@kit/components/ToolShell.astro';
 import Field from '@kit/components/Field.astro';
 import Chart from '@kit/components/Chart.astro';
-import AdSlot from '@kit/components/AdSlot.astro';
 import RelatedTools from '@kit/components/RelatedTools.astro';
 import { SITE, toolBySlug, toolsExcept } from '../../lib/site';
 import { D } from '../../lib/tools/rent-vs-buy';
@@ -34,8 +33,6 @@ const related = toolsExcept(tool.slug).slice(0, 3).map((t) => ({
     title="Rent vs Buy Calculator"
     intro="Monthly payment is the wrong comparison. This runs both paths month by month and reports where you actually end up — with the renter investing the down payment they never had to make."
     breadcrumbs={[{ href: '/', label: 'Home' }, { href: '/tools', label: 'Calculators' }, { label: tool.nav }]}
-    adSlotTop="rvb-top"
-    adSlotResults="rvb-results"
     calcId="rvb"
   >
     <form slot="controls" id="rvb-form">
@@ -133,7 +130,6 @@ const related = toolsExcept(tool.slug).slice(0, 3).map((t) => ({
 
     <div id="rvb-verdict" style="margin-top:var(--s-5)"></div>
 
-    <AdSlot unit="rvb-mid" variant="inline" />
 
     <section class="prose" style="margin-top:var(--s-7)">
       <h2>Why monthly payment is the wrong comparison</h2>

@@ -1,6 +1,5 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import AdSlot from '@kit/components/AdSlot.astro';
 import { SITE } from '../../lib/site';
 import { STATES } from '@data/states';
 
@@ -26,7 +25,6 @@ const noTax = STATES.filter((s) => s.transferTaxPct === null);
         $400,000 home that is a spread of $16,000 for an identical transaction.
       </p>
     </div>
-    <AdSlot unit="cc-index-top" variant="leaderboard" lazy={false} />
 
     <section style="margin-top:var(--s-6)">
       <div class="section-head">

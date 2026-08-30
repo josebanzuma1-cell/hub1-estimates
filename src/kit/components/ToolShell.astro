@@ -1,23 +1,18 @@
 ---
 /* KIT — generic tool page structure.
-   Breadcrumbs, hero, the controls/results grid, and two of the three ad
-   placements. The third (mid-content) is placed by the page inside its prose,
-   because only the page knows where its content breaks naturally.
+   Breadcrumbs, hero, and the controls/results grid.
 
    Slots: "controls", "results", and the default slot for everything below
    the fold (prose, tables, related tools). */
-import AdSlot from './AdSlot.astro';
 
 interface Props {
   title: string;
   intro: string;
   breadcrumbs: Array<{ href?: string; label: string }>;
-  adSlotTop: string;
-  adSlotResults: string;
   /** engine root id — must match the id passed to mount() */
   calcId: string;
 }
-const { title, intro, breadcrumbs, adSlotTop, adSlotResults, calcId } = Astro.props;
+const { title, intro, breadcrumbs, calcId } = Astro.props;
 ---
 {/* The engine root wraps the whole page, not just the controls/results grid:
     tools routinely put data-out values in sections below the fold (a pro forma
@@ -38,7 +33,6 @@ const { title, intro, breadcrumbs, adSlotTop, adSlotResults, calcId } = Astro.pr
     <p>{intro}</p>
   </div>
 
-  <AdSlot unit={adSlotTop} variant="leaderboard" lazy={false} />
 
   <div class="tool-grid">
     <div class="panel">
@@ -47,7 +41,6 @@ const { title, intro, breadcrumbs, adSlotTop, adSlotResults, calcId } = Astro.pr
     </div>
     <div>
       <slot name="results" />
-      <AdSlot unit={adSlotResults} variant="inline" />
     </div>
   </div>
 

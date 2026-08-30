@@ -88,25 +88,6 @@
 .btn--primary:hover { background: var(--c-accent-2); border-color: var(--c-accent-2); color: var(--c-accent-ink); }
 .btn[data-copied="true"] { color: var(--c-pos); border-color: var(--c-pos); }
 
-/* ---------- ad slots ----------
-   Height is reserved by CSS before any ad script runs. The label is
-   required by AdSense policy and also stops the unit reading as content. */
-.ad {
-  display: block; margin-block: var(--s-6); text-align: center;
-  background: var(--c-surface-2); border: 1px dashed var(--c-line-2);
-  border-radius: var(--r-md); overflow: hidden;
-  contain: layout size style;
-}
-.ad::before {
-  content: "Advertisement"; display: block; font-size: 10px;
-  letter-spacing: .1em; text-transform: uppercase; color: var(--c-ink-3);
-  padding-top: var(--s-2);
-}
-.ad--leaderboard { min-height: var(--ad-h-leaderboard); height: var(--ad-h-leaderboard); }
-.ad--inline     { min-height: var(--ad-h-inline);      height: var(--ad-h-inline); }
-.ad--sidebar    { min-height: var(--ad-h-sidebar);     height: var(--ad-h-sidebar); }
-.ad__inner { display: grid; place-items: center; height: calc(100% - 20px); color: var(--c-ink-3); font-size: var(--t-xs); }
-
 /* ---------- charts (hand-rolled SVG) ---------- */
 .chart { width: 100%; }
 .chart svg { width: 100%; display: block; overflow: visible; }

@@ -5,6 +5,7 @@ import '@kit/styles/base.css';
 import '@kit/styles/forms.css';
 import '@kit/styles/components.css';
 import { SITE, NAV } from '../lib/site';
+import Logo from '@kit/components/Logo.astro';
 
 interface Props {
   title: string;
@@ -18,7 +19,6 @@ interface Props {
 
 const { title, description, canonical, schema = [], noindex = false } = Astro.props;
 const canonicalUrl = new URL(canonical, SITE.url).href;
-const adsClient = import.meta.env.PUBLIC_ADSENSE_CLIENT;
 
 const baseSchema = {
   '@context': 'https://schema.org',
@@ -36,6 +36,7 @@ const year = new Date().getFullYear();
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalUrl} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     {noindex && <meta name="robots" content="noindex,follow" />}
 
     <meta property="og:type" content="website" />
@@ -48,20 +49,12 @@ const year = new Date().getFullYear();
 
     <script type="application/ld+json" set:html={JSON.stringify(baseSchema)} />
     {schema.map((s) => <script type="application/ld+json" set:html={JSON.stringify(s)} />)}
-
-    {adsClient && (
-      <script
-        async
-        src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsClient}`}
-        crossorigin="anonymous"
-      />
-    )}
   </head>
   <body>
     <header class="site-header">
       <div class="page site-header__inner">
         <a class="brand" href="/">
-          <span class="brand__mark" aria-hidden="true">{SITE.initials}</span>
+          <Logo size={26} />
           {SITE.name}
         </a>
         <nav class="nav" aria-label="Calculators">

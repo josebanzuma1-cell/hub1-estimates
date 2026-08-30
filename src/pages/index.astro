@@ -1,6 +1,5 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import AdSlot from '@kit/components/AdSlot.astro';
 import { SITE, TOOLS } from '../lib/site';
 import { STATES } from '@data/states';
 import { METROS } from '@data/metros';
@@ -38,7 +37,6 @@ const schema = [{
       </div>
     </section>
 
-    <AdSlot unit="home-top" variant="leaderboard" lazy={false} />
 
     {groups.map((g) => (
       <section style="margin-top:var(--s-7)">
@@ -57,7 +55,6 @@ const schema = [{
       </section>
     ))}
 
-    <AdSlot unit="home-mid" variant="inline" />
 
     <section style="margin-top:var(--s-7)" class="prose">
       <h2>Why these are built the way they are</h2>

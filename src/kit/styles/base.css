@@ -72,11 +72,6 @@ a:hover { color: var(--c-accent-2); }
   align-items: center; gap: var(--s-2);
 }
 .brand:hover { color: var(--c-ink); }
-.brand__mark {
-  width: 22px; height: 22px; border-radius: 5px; background: var(--c-accent);
-  display: grid; place-items: center; color: var(--c-accent-ink);
-  font-size: 12px; font-weight: 700; letter-spacing: 0;
-}
 .nav { display: none; gap: var(--s-5); font-size: var(--t-sm); }
 @media (min-width: 900px) { .nav { display: flex; } }
 .nav a { color: var(--c-ink-2); text-decoration: none; font-weight: 500; }

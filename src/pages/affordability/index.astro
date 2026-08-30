@@ -1,6 +1,5 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import AdSlot from '@kit/components/AdSlot.astro';
 import { SITE } from '../../lib/site';
 import { METROS } from '@data/metros';
 
@@ -22,7 +21,6 @@ const sorted = [...METROS].sort((a, b) => a.medianPrice / a.medianIncome - b.med
         market is, and it varies far more than mortgage rates do.
       </p>
     </div>
-    <AdSlot unit="af-index-top" variant="leaderboard" lazy={false} />
     <section style="margin-top:var(--s-6)">
       <div class="table-wrap">
         <table class="data">

@@ -7,8 +7,8 @@
    still unverified.
 
    The reason is narrow and practical. Publishing a wrong transfer tax rate
-   across 50 state pages is both an AdSense content-quality problem and the
-   kind of thing a visitor makes a real financial decision on. Seeded values
+   across 50 state pages is both a content-quality problem and the kind of
+   thing a visitor makes a real financial decision on. Seeded values
    are a scaffold for the page template, not a data set. */
 
 export interface StateData {

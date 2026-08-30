@@ -5,7 +5,6 @@
 import ToolShell from '@kit/components/ToolShell.astro';
 import Field from '@kit/components/Field.astro';
 import Segmented from '@kit/components/Segmented.astro';
-import AdSlot from '@kit/components/AdSlot.astro';
 import DataNote from '@kit/components/DataNote.astro';
 import { D } from '../lib/tools/closing-costs';
 import type { StateData } from '@data/types';
@@ -20,7 +19,7 @@ interface Props {
 const { state = null, title, intro, breadcrumbs, defaultPrice } = Astro.props;
 const price = defaultPrice ?? (D.price as number);
 ---
-<ToolShell {title} {intro} {breadcrumbs} adSlotTop="cc-top" adSlotResults="cc-results" calcId="cc">
+<ToolShell {title} {intro} {breadcrumbs} calcId="cc">
   <form slot="controls" id="cc-form">
     <Field name="price" label="Purchase price" affix="currency" value={price}
            min={10000} max={20000000} step={5000}
@@ -104,7 +103,6 @@ const price = defaultPrice ?? (D.price as number);
     </div>
   )}
 
-  <AdSlot unit="cc-mid" variant="inline" />
 
   <slot />
 </ToolShell>

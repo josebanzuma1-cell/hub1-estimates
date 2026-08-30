@@ -4,8 +4,6 @@
 
 export const SITE = {
   name: 'Ratepath',
-  /** shown in the header mark */
-  initials: 'R',
   tagline: 'Mortgage and real estate calculators that show their work',
   description:
     'Free mortgage calculators with real amortization schedules, extra-payment ' +

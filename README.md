@@ -63,17 +63,17 @@ and can be tested independently of the browser.
    in production so the build fails if any unverified row remains.
 2. **Set the domain.** `SITE.url` in `src/lib/site.ts`, `site` in
    `astro.config.mjs`, and the `Sitemap:` line in `public/robots.txt`.
-3. **Set `PUBLIC_ADSENSE_CLIENT`** in the production environment. Until it is
-   set, ad slots render labelled placeholders at exactly the same dimensions,
-   so layout is identical before and after approval.
+3. **No advertising.** Ad slots were removed; the site ships with no ad
+   markup, no ad script, and no third-party requests. If ads are ever wanted
+   back, the reserved-height `AdSlot` component is in git history at `bdc82c3`.
 4. **Re-check prose figures.** Worked examples in the copy are computed from
    the models; if you change a default, re-derive them.
 
 ## Performance
 
-Per-page JavaScript is 1.4–1.9 kB gzipped, plus a 4.6 kB shared kit chunk —
-roughly 6 kB against the 50 kB budget. Ad container heights are fixed in CSS
-before any ad script runs, so served ads cannot shift layout.
+Per-page JavaScript is 1.4–2.6 kB gzipped, plus a shared kit chunk of about
+5 kB — roughly 7.5 kB on the heaviest page against the 50 kB budget. No
+third-party scripts, so nothing external can shift layout or block render.
 
 ## Deployment
 

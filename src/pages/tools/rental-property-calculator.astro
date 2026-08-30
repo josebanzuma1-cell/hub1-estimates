@@ -3,7 +3,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import ToolShell from '@kit/components/ToolShell.astro';
 import Field from '@kit/components/Field.astro';
 import Chart from '@kit/components/Chart.astro';
-import AdSlot from '@kit/components/AdSlot.astro';
 import RelatedTools from '@kit/components/RelatedTools.astro';
 import { SITE, toolBySlug, toolsExcept } from '../../lib/site';
 import { D } from '../../lib/tools/rental';
@@ -34,8 +33,6 @@ const related = toolsExcept(tool.slug).slice(0, 3).map((t) => ({
     title="Rental Property Calculator"
     intro="Cap rate, cash-on-cash and DSCR from the same set of inputs, plus a ten-year pro forma. The reserves most spreadsheets omit — vacancy, maintenance and capital expenditure — are included by default, because leaving them out is how a deal looks profitable until the roof goes."
     breadcrumbs={[{ href: '/', label: 'Home' }, { href: '/tools', label: 'Calculators' }, { label: tool.nav }]}
-    adSlotTop="rp-top"
-    adSlotResults="rp-results"
     calcId="rp"
   >
     <form slot="controls" id="rp-form">
@@ -152,7 +149,6 @@ const related = toolsExcept(tool.slug).slice(0, 3).map((t) => ({
 
     <div id="rp-verdict" style="margin-top:var(--s-5)"></div>
 
-    <AdSlot unit="rp-mid" variant="inline" />
 
     <section style="margin-top:var(--s-7)">
       <div class="section-head">

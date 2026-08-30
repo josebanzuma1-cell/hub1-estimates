@@ -4,9 +4,9 @@
    re-themed per hub. Everything else stays identical across the
    portfolio so the components behave the same way everywhere.
 
-   Light-only by design. AdSense creatives are overwhelmingly
-   light-background; a dark shell makes served ads look broken and
-   measurably hurts viewability. Revisit only if ad units change.
+   Light-only by design. A single committed palette keeps the charts and
+   results cards reading consistently; the SVG series colours are tuned for
+   this ground and would need re-picking for a dark one.
    ============================================================ */
 
 :root {
@@ -58,17 +58,4 @@
 
   --w-prose: 68ch;
   --w-page:  1180px;
-
-  /* Ad slot heights. Declared here so CSS reserves space BEFORE the ad
-     script runs. Never let an ad unit size itself — that is the CLS. */
-  --ad-h-leaderboard: 280px;  /* mobile-first: tall rect, not 90px banner */
-  --ad-h-inline:      280px;
-  --ad-h-sidebar:     600px;
-}
-
-@media (min-width: 768px) {
-  :root {
-    --ad-h-leaderboard: 90px;
-    --ad-h-inline:      280px;
-  }
 }

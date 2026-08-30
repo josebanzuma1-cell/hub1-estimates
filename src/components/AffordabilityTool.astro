@@ -3,7 +3,6 @@
 import ToolShell from '@kit/components/ToolShell.astro';
 import Field from '@kit/components/Field.astro';
 import Chart from '@kit/components/Chart.astro';
-import AdSlot from '@kit/components/AdSlot.astro';
 import DataNote from '@kit/components/DataNote.astro';
 import { D } from '../lib/tools/affordability';
 import type { MetroData } from '@data/types';
@@ -19,7 +18,7 @@ const income = metro ? Math.round(metro.medianIncome) : (D.inc as number);
 const tax = metro ? metro.propertyTaxPct : (D.tax as number);
 const ins = metro ? metro.insuranceAnnual : (D.ins as number);
 ---
-<ToolShell {title} {intro} {breadcrumbs} adSlotTop="af-top" adSlotResults="af-results" calcId="af">
+<ToolShell {title} {intro} {breadcrumbs} calcId="af">
   <form slot="controls" id="af-form">
     <div class="fieldset">
       <legend>Your finances</legend>
@@ -110,6 +109,5 @@ const ins = metro ? metro.insuranceAnnual : (D.ins as number);
     </div>
   )}
 
-  <AdSlot unit="af-mid" variant="inline" />
   <slot />
 </ToolShell>

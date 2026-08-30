@@ -14,9 +14,9 @@ Three separate reasons, all of which have bitten publishers in this niche:
 1. **A visitor acts on it.** Transfer tax on a $500,000 purchase is a
    four-figure line item. Being wrong by half a percent is $2,500 of someone's
    closing statement.
-2. **AdSense reviews content quality.** Confidently-stated wrong numbers across
-   50 near-identical pages is exactly the profile that gets a site classed as
-   low-value scaled content.
+2. **Search engines assess content quality.** Confidently-stated wrong numbers
+   across 50 near-identical pages is exactly the profile that gets a site
+   classed as low-value scaled content.
 3. **You cannot defend a number you cannot source.** When a county disputes a
    figure, the answer needs to be a citation, not a shrug.
 

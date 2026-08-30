@@ -3,7 +3,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import ToolShell from '@kit/components/ToolShell.astro';
 import Field from '@kit/components/Field.astro';
 import Chart from '@kit/components/Chart.astro';
-import AdSlot from '@kit/components/AdSlot.astro';
 import RelatedTools from '@kit/components/RelatedTools.astro';
 import { SITE, toolBySlug, toolsExcept } from '../../lib/site';
 import { D } from '../../lib/tools/heloc';
@@ -34,8 +33,6 @@ const related = toolsExcept(tool.slug).slice(0, 3).map((t) => ({
     title="HELOC vs Cash-Out Refinance"
     intro="Two ways to turn equity into cash. A HELOC prices only the new money; a cash-out refinance re-prices your entire balance at today's rate. If you are holding a low first mortgage, that difference is usually larger than everything else combined."
     breadcrumbs={[{ href: '/', label: 'Home' }, { href: '/tools', label: 'Calculators' }, { label: tool.nav }]}
-    adSlotTop="hl-top"
-    adSlotResults="hl-results"
     calcId="hl"
   >
     <form slot="controls" id="hl-form">
@@ -129,7 +126,6 @@ const related = toolsExcept(tool.slug).slice(0, 3).map((t) => ({
 
     <div id="hl-verdict" style="margin-top:var(--s-5)"></div>
 
-    <AdSlot unit="hl-mid" variant="inline" />
 
     <section class="prose" style="margin-top:var(--s-7)">
       <h2>The re-pricing problem</h2>

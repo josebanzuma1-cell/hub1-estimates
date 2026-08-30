@@ -4,7 +4,6 @@ import ToolShell from '@kit/components/ToolShell.astro';
 import Field from '@kit/components/Field.astro';
 import Segmented from '@kit/components/Segmented.astro';
 import Chart from '@kit/components/Chart.astro';
-import AdSlot from '@kit/components/AdSlot.astro';
 import RelatedTools from '@kit/components/RelatedTools.astro';
 import { SITE, toolBySlug, toolsExcept } from '../../lib/site';
 import { D } from '../../lib/tools/amortization';
@@ -59,8 +58,6 @@ const related = toolsExcept(tool.slug).slice(0, 3).map((t) => ({
     title="Amortization Calculator with Extra Payments"
     intro="Enter your loan and see the whole schedule — every payment split into principal and interest. Add an extra payment and the chart shows the payoff date move."
     breadcrumbs={[{ href: '/', label: 'Home' }, { href: '/tools', label: 'Calculators' }, { label: tool.nav }]}
-    adSlotTop="amort-top"
-    adSlotResults="amort-results"
     calcId="amort"
   >
     <form slot="controls" id="amort-form">
@@ -139,7 +136,6 @@ const related = toolsExcept(tool.slug).slice(0, 3).map((t) => ({
       <Chart id="chart-split" height={240} caption="Principal includes any extra payments you added." />
     </section>
 
-    <AdSlot unit="amort-mid" variant="inline" />
 
     <section>
       <div class="section-head">
