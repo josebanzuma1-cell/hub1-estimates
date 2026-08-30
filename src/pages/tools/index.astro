@@ -7,14 +7,18 @@ const description = 'Every mortgage, refinance, affordability and rental calcula
 const canonical = '/tools';
 ---
 <BaseLayout {title} {description} {canonical}>
-  <div class="page">
-    <nav class="breadcrumbs" aria-label="Breadcrumb">
+  <div class="page-band">
+    <div class="page">
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
       <a href="/">Home</a><span aria-hidden="true">/</span><span aria-current="page">Calculators</span>
-    </nav>
-    <div class="tool-hero">
+      </nav>
+      <div class="tool-hero">
       <h1>All calculators</h1>
       <p>Seven tools covering the purchase, the refinance and the rental deal.</p>
+      </div>
     </div>
+  </div>
+  <div class="page">
     <div class="cards" style="margin-top:var(--s-6)">
       {TOOLS.map((t) => (
         <a class="card" href={`/tools/${t.slug}`}>

@@ -59,3 +59,31 @@
   --w-prose: 68ch;
   --w-page:  1180px;
 }
+
+/* ============================================================
+   Bold surface palette.
+   The site leads with saturated colour blocks rather than an
+   accent-on-neutral page. Deep green carries the brand areas;
+   lime supplies the contrast a CTA needs against them — the same
+   job magenta does on indigo for comparison sites.
+   ============================================================ */
+:root {
+  --c-deep:        #072e22;   /* hero band, header, footer */
+  --c-deep-2:      #0b3d2e;   /* raised surfaces on the band */
+  --c-deep-line:   #1d5443;   /* hairlines on the band */
+  --c-on-deep:     #eaf3ef;   /* body text on the band */
+  --c-on-deep-dim: #9dbcb0;   /* secondary text on the band */
+
+  --c-lime:        #b6f24d;   /* primary CTA + highlighted words */
+  --c-lime-2:      #c8f97a;   /* CTA hover */
+  --c-lime-ink:    #08301f;   /* text on lime */
+
+  --c-mint:        #e4f5ec;   /* soft tile backgrounds */
+  --c-sand:        #fdf3e0;   /* alternating tile backgrounds */
+  --c-sky:         #e5eefb;
+
+  --r-xl:  22px;
+  --r-2xl: 28px;
+
+  --shadow-lift: 0 10px 30px rgba(7,46,34,.10), 0 2px 6px rgba(7,46,34,.06);
+}

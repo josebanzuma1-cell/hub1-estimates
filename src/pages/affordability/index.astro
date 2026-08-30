@@ -9,18 +9,22 @@ const canonical = '/affordability';
 const sorted = [...METROS].sort((a, b) => a.medianPrice / a.medianIncome - b.medianPrice / b.medianIncome);
 ---
 <BaseLayout {title} {description} {canonical}>
-  <div class="page">
-    <nav class="breadcrumbs" aria-label="Breadcrumb">
+  <div class="page-band">
+    <div class="page">
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
       <a href="/">Home</a><span aria-hidden="true">/</span><span aria-current="page">Affordability by city</span>
-    </nav>
-    <div class="tool-hero">
+      </nav>
+      <div class="tool-hero">
       <h1>Affordability by city</h1>
       <p>
         Ranked by price-to-income ratio — median home price divided by median
         household income. It is the cleanest single measure of how stretched a
         market is, and it varies far more than mortgage rates do.
       </p>
+      </div>
     </div>
+  </div>
+  <div class="page">
     <section style="margin-top:var(--s-6)">
       <div class="table-wrap">
         <table class="data">

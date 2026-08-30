@@ -1,9 +1,8 @@
-| `--c-accent`, `--c-accent-2`, `--c-accent-soft` in `tokens.css` | One accent colour per hub — this is most of what makes them look distinct. |
-| `src/kit/components/Logo.astro`, `public/favicon.svg` | The mark. It fills from `--c-accent`, so the SVG only needs redrawing if the hub wants a different symbol. |# Porting this build to Hub 2
+# Porting this build to Hub 2
 
 Each hub is its own workspace and its own repo. The reusable half is
 `src/kit/` — copy that one folder and you inherit the design system, the
-calculator engine, the charts and the ad handling. Everything else is
+calculator engine, the charts and the page furniture. Everything else is
 hub-specific and gets rewritten.
 
 ## What to copy
@@ -14,6 +13,7 @@ src/kit/                    <- copy wholesale, do not edit per hub
   styles/base.css
   styles/forms.css
   styles/components.css
+  styles/surfaces.css      <- dark header, hero band, tiles, trust strip
   calc/engine.ts            <- mount(), input binding, debounce, URL state
   calc/finance.ts           <- pmt, amortize, futureValue, npv, irr
   calc/format.ts            <- currency/percent/months formatters
@@ -37,7 +37,8 @@ Also copy `scripts/check-data.mjs` if the hub has programmatic data.
 | `src/pages/**` | Page shells and prose. |
 | `src/data/*` | Programmatic data sets. |
 | `src/layouts/BaseLayout.astro` | Footer links and JSON-LD. Structure stays. |
-| `--c-accent`, `--c-accent-2`, `--c-accent-soft` in `tokens.css` | One accent colour per hub — this is most of what makes them look distinct. |
+| `--c-accent*`, `--c-deep*`, `--c-lime*` in `tokens.css` | The palette. `--c-deep` is the hero/header band, `--c-lime` the CTA that has to pop against it. Changing these three families re-skins a hub entirely. |
+| `src/kit/components/Logo.astro`, `public/favicon.svg` | The mark. It fills from `--c-accent`, so the SVG only needs redrawing if the hub wants a different symbol. |
 
 ## The pattern for a new calculator
 
@@ -119,3 +120,21 @@ itself, or CLS goes with it.
 - [ ] All data rows `verified: true`, `PUBLIC_REQUIRE_VERIFIED=1` set in prod
 - [ ] `SITE.url` set to the real domain (also in `robots.txt`)
 - [ ] Every prose figure re-checked against model output
+
+## Page furniture
+
+Three band treatments, so every page reads as part of one system:
+
+- **Homepage** — `.band`, a full-bleed `--c-deep` hero with a centred headline
+  (wrap the emphasised word in `<em>` for the lime highlight), the `.picker`
+  selector + CTA, then `.trust` and `.tiles`.
+- **Tool pages** — `.tool-band`, a soft mint gradient behind the breadcrumbs and
+  h1 only. The calculator stays on plain ground: a results card has to read as
+  an instrument, not another marketing panel.
+- **Index and static pages** — `.page-band`, the same gradient, applied by
+  wrapping the breadcrumbs and `.tool-hero` and reopening `.page` after it.
+
+The `.trust` strip carries **verifiable properties of the product only** —
+counts, guarantees you actually make. No ratings, no review counts, no
+testimonials. Comparison sites lean hard on social proof; inventing it is how a
+site loses the trust the strip is there to build.

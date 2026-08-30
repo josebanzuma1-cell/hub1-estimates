@@ -5,7 +5,8 @@
    set-theory symbol and an unambiguous smile at 20px.
 
    Drawn on a 32×32 grid with 2px strokes so it stays legible as a favicon.
-   Body colour follows --c-accent, so re-theming a hub re-themes the mark. */
+   Body follows --c-accent so re-theming a hub re-themes the mark; --logo-body
+   and --logo-glyph override that where the mark sits on a dark surface. */
 interface Props {
   size?: number;
   /** accessible name; omit when a text wordmark sits next to it */
@@ -23,12 +24,12 @@ const { size = 24, title } = Astro.props;
 >
   {title && <title>{title}</title>}
 
-  <rect x="5" y="1.5" width="22" height="29" rx="5.5" fill="var(--c-accent)" />
+  <rect x="5" y="1.5" width="22" height="29" rx="5.5" fill="var(--logo-body, var(--c-accent))" />
 
   <!-- display / brow -->
-  <rect x="8.6" y="5.2" width="14.8" height="4" rx="1.3" fill="#fff" opacity=".34" />
+  <rect x="8.6" y="5.2" width="14.8" height="4" rx="1.3" fill="var(--logo-glyph, #fff)" opacity=".34" />
 
-  <g stroke="#fff" stroke-width="2" stroke-linecap="round">
+  <g stroke="var(--logo-glyph, #fff)" stroke-width="2" stroke-linecap="round">
     <!-- left eye: plus key -->
     <path d="M9.7 15h4.6M12 12.7v4.6" />
     <!-- right eye: multiply key -->

@@ -8,10 +8,12 @@ const title = `${SITE.name} — ${SITE.tagline}`;
 const description = SITE.description;
 const canonical = '/';
 
+const TILE_TINT = ['tile--mint', 'tile--sand', 'tile--sky'] as const;
+
 const groups = [
-  { key: 'buy', label: 'Buying a home', desc: 'What you can carry, what it costs to get in, and whether to buy at all.' },
-  { key: 'refinance', label: 'Refinancing and equity', desc: 'Whether a new rate pays for itself, and how to pull equity without repricing everything.' },
-  { key: 'invest', label: 'Investing', desc: 'Underwriting a rental deal on the numbers that decide it.' },
+  { key: 'buy',       label: 'Buying a home',        desc: 'What you can carry, what it costs to get in, and whether buying beats renting at all.' },
+  { key: 'refinance', label: 'Refinancing & equity', desc: 'Whether a new rate pays for itself, and how to pull equity without repricing everything.' },
+  { key: 'invest',    label: 'Investing',            desc: 'Underwriting a rental deal on the numbers that actually decide it.' },
 ] as const;
 
 const schema = [{
@@ -23,81 +25,200 @@ const schema = [{
 }];
 ---
 <BaseLayout {title} {description} {canonical} {schema}>
-  <div class="page">
-    <section style="padding-block:var(--s-8) var(--s-6);max-width:none">
-      <h1 style="font-size:var(--t-4xl);max-width:16ch">Mortgage math, with the work shown.</h1>
-      <p style="max-width:58ch;font-size:var(--t-md);color:var(--c-ink-2);margin-top:var(--s-4)">
-        Seven calculators for buying, refinancing and investing. Every one shows the
-        full schedule behind the number, states its assumptions, and gives you a URL
-        you can send to someone else with your inputs intact.
+  <!-- hero band -->
+  <section class="band">
+    <div class="page band__inner">
+      <h1>Know the <em>real</em> number before you sign.</h1>
+      <p class="band__sub">
+        Seven mortgage and property calculators that show the full schedule behind
+        the answer — not just a monthly payment.
       </p>
-      <div class="chip-row" style="margin-top:var(--s-5)">
-        <a class="btn btn--primary" href="/tools/amortization-calculator">Amortization calculator</a>
-        <a class="btn" href="/tools/home-affordability-calculator">What can I afford?</a>
-      </div>
-    </section>
 
+      <form class="picker" id="picker" action="/tools" method="get">
+        <div class="picker__field">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <rect x="4" y="2" width="16" height="20" rx="3"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 17h.01M12 17h.01M16 17h.01"/>
+          </svg>
+          <label class="visually-hidden" for="picker-select">Choose a calculator</label>
+          <select id="picker-select">
+            {TOOLS.map((t) => <option value={`/tools/${t.slug}`}>{t.nav}</option>)}
+          </select>
+        </div>
+        <button class="picker__go" type="submit">
+          Open calculator
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6"/>
+          </svg>
+        </button>
+      </form>
 
-    {groups.map((g) => (
-      <section style="margin-top:var(--s-7)">
-        <div class="section-head">
+      <p class="band__note">
+        Free, no sign-up. Every result gets a URL you can send to your partner or broker.
+      </p>
+    </div>
+  </section>
+
+  <!-- factual trust strip: no ratings, no testimonials -->
+  <section class="trust">
+    <div class="page trust__inner">
+      <span class="trust__item">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        7 calculators, no sign-up
+      </span>
+      <span class="trust__item">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        {STATES.length} states, {METROS.length} metros
+      </span>
+      <span class="trust__item">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        Nothing leaves your browser
+      </span>
+      <span class="trust__item">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        Every assumption stated
+      </span>
+    </div>
+  </section>
+
+  {groups.map((g, gi) => (
+    <section class={`section${gi === 1 ? ' section--tint' : ''}`}>
+      <div class="page">
+        <div class="section__head">
           <h2>{g.label}</h2>
           <p>{g.desc}</p>
         </div>
-        <div class="cards">
-          {TOOLS.filter((t) => t.group === g.key).map((t) => (
-            <a class="card" href={`/tools/${t.slug}`}>
-              <span class="card__title">{t.nav}</span>
-              <span class="card__desc">{t.blurb}</span>
+        <div class="tiles">
+          {TOOLS.filter((t) => t.group === g.key).map((t, i) => (
+            <a class={`tile ${TILE_TINT[(gi + i) % 3]}`} href={`/tools/${t.slug}`}>
+              <span class="tile__icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M3 17l5-5 4 3 8-8"/><path d="M21 7v5h-5"/>
+                </svg>
+              </span>
+              <span class="tile__title">{t.nav}</span>
+              <span class="tile__desc">{t.blurb}</span>
+              <span class="tile__go">
+                Open
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </span>
             </a>
           ))}
         </div>
-      </section>
-    ))}
-
-
-    <section style="margin-top:var(--s-7)" class="prose">
-      <h2>Why these are built the way they are</h2>
-      <p>
-        Most mortgage calculators answer a question nobody asked. They report a
-        monthly payment to two decimal places and stop, which is fine for the one
-        input people already know and useless for every decision that actually
-        follows from it.
-      </p>
-      <p>
-        The tools here are built around comparisons instead. Refinancing is not a
-        question about a lower payment, it is a question about whether a lower rate
-        repays its costs before you move. Renting versus buying is not a question
-        about payment versus rent, it is a question about where your net worth lands
-        in ten years with the down payment invested either way. Those need a model
-        and a chart, not a single figure.
-      </p>
-      <p>
-        Every calculator encodes its inputs in the URL, so a result is something you
-        can send to a partner, a lender or a forum thread and have them see exactly
-        what you saw. Every one states what it leaves out — because the assumptions
-        are usually where the answer really comes from.
-      </p>
+      </div>
     </section>
+  ))}
 
-    <section style="margin-top:var(--s-7)">
-      <div class="section-head">
-        <h2>Closing costs by state</h2>
-        <p>Transfer taxes, recording fees and attorney requirements, state by state.</p>
+  <!-- benefit blocks -->
+  <section class="section">
+    <div class="page">
+      <div class="section__head">
+        <h2>Why these are built differently</h2>
+        <p>Most mortgage calculators answer a question nobody asked, then stop.</p>
+      </div>
+      <div class="benefits">
+        <div class="benefit">
+          <div class="benefit__num">01</div>
+          <h3>The whole schedule, not one number</h3>
+          <p>
+            Every tool shows the payment-by-payment path behind its answer. You can
+            see the month the balance hits zero, and the year principal finally
+            overtakes interest.
+          </p>
+        </div>
+        <div class="benefit">
+          <div class="benefit__num">02</div>
+          <h3>Comparisons, not single answers</h3>
+          <p>
+            Refinancing is not a question about a lower payment. Renting is not a
+            question about rent versus mortgage. These model both paths and report
+            where you actually end up.
+          </p>
+        </div>
+        <div class="benefit">
+          <div class="benefit__num">03</div>
+          <h3>Results you can send to someone</h3>
+          <p>
+            Your inputs are encoded in the URL. Copy the link and whoever opens it
+            sees exactly the scenario you saw — no screenshots, no re-typing.
+          </p>
+        </div>
+        <div class="benefit">
+          <div class="benefit__num">04</div>
+          <h3>Assumptions on the page</h3>
+          <p>
+            Each tool states what it includes and what it deliberately leaves out.
+            Where a figure is an unverified estimate, it says so rather than
+            presenting it as fact.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- location hubs -->
+  <section class="section section--tint">
+    <div class="page">
+      <div class="section__head">
+        <h2>Local numbers, not national averages</h2>
+        <p>
+          Property tax and transfer tax vary more between states than mortgage
+          rates vary between lenders. Start from where you are actually buying.
+        </p>
+      </div>
+      <div class="tiles" style="margin-bottom:var(--s-6)">
+        <a class="tile tile--mint" href="/closing-costs">
+          <span class="tile__icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg>
+          </span>
+          <span class="tile__title">Closing costs by state</span>
+          <span class="tile__desc">
+            Transfer tax, recording fees and attorney requirements for all {STATES.length} states and DC.
+          </span>
+          <span class="tile__go">Browse states
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </span>
+        </a>
+        <a class="tile tile--sand" href="/affordability">
+          <span class="tile__icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-5.5-7-11a7 7 0 1 1 14 0c0 5.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>
+          </span>
+          <span class="tile__title">Affordability by city</span>
+          <span class="tile__desc">
+            Price-to-income and price-to-rent ratios, local tax rates and insurance for {METROS.length} metros.
+          </span>
+          <span class="tile__go">Browse cities
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </span>
+        </a>
+        <a class="tile tile--sky" href="/methodology">
+          <span class="tile__icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14M8 7h8M8 11h8M8 15h5"/></svg>
+          </span>
+          <span class="tile__title">How we calculate</span>
+          <span class="tile__desc">
+            Every formula, every default, and everything each model deliberately excludes.
+          </span>
+          <span class="tile__go">Read the methodology
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </span>
+        </a>
       </div>
       <div class="chip-row">
-        {STATES.map((s) => <a class="chip" href={`/closing-costs/${s.slug}`}>{s.name}</a>)}
+        {STATES.slice(0, 14).map((s) => <a class="chip" href={`/closing-costs/${s.slug}`}>{s.name}</a>)}
+        <a class="chip" href="/closing-costs">All {STATES.length} states →</a>
       </div>
-    </section>
-
-    <section style="margin-top:var(--s-7)">
-      <div class="section-head">
-        <h2>Affordability by city</h2>
-        <p>Local property tax rates, insurance and median prices.</p>
-      </div>
-      <div class="chip-row">
-        {METROS.map((m) => <a class="chip" href={`/affordability/${m.slug}`}>{m.name}</a>)}
-      </div>
-    </section>
-  </div>
+    </div>
+  </section>
 </BaseLayout>
+
+<script>
+  // The picker is a plain form so it works without JS (submitting to /tools);
+  // with JS it goes straight to the chosen calculator.
+  const form = document.getElementById('picker') as HTMLFormElement | null;
+  const select = document.getElementById('picker-select') as HTMLSelectElement | null;
+  form?.addEventListener('submit', (e) => {
+    if (!select?.value) return;
+    e.preventDefault();
+    location.href = select.value;
+  });
+</script>

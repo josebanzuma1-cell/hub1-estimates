@@ -13,18 +13,22 @@ const sorted = [...STATES].sort((a, b) => (b.transferTaxPct ?? 0) - (a.transferT
 const noTax = STATES.filter((s) => s.transferTaxPct === null);
 ---
 <BaseLayout {title} {description} {canonical}>
-  <div class="page">
-    <nav class="breadcrumbs" aria-label="Breadcrumb">
+  <div class="page-band">
+    <div class="page">
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
       <a href="/">Home</a><span aria-hidden="true">/</span><span aria-current="page">Closing costs by state</span>
-    </nav>
-    <div class="tool-hero">
+      </nav>
+      <div class="tool-hero">
       <h1>Closing costs by state</h1>
       <p>
         Transfer tax is the line that varies most between states — from nothing at
         all in {noTax.length} of them to 4% of the purchase price in Delaware. On a
         $400,000 home that is a spread of $16,000 for an identical transaction.
       </p>
+      </div>
     </div>
+  </div>
+  <div class="page">
 
     <section style="margin-top:var(--s-6)">
       <div class="section-head">

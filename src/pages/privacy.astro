@@ -7,8 +7,12 @@ const canonical = '/privacy';
 const updated = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 ---
 <BaseLayout {title} {description} {canonical}>
+  <div class="page-band">
+    <div class="page">
+      <div class="tool-hero"><h1>Privacy policy</h1><p>Last updated {updated}.</p></div>
+    </div>
+  </div>
   <div class="page">
-    <div class="tool-hero"><h1>Privacy policy</h1><p>Last updated {updated}.</p></div>
     <section class="prose">
       <h2>What we collect</h2>
       <p>
