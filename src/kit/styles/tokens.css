@@ -78,9 +78,11 @@
   --c-pop-2:      #c8f97a;   /* CTA hover */
   --c-pop-ink:    #08301f;   /* text on lime */
 
-  --c-mint:        #e4f5ec;   /* soft tile backgrounds */
-  --c-sand:        #fdf3e0;   /* alternating tile backgrounds */
-  --c-sky:         #e5eefb;
+  /* Three soft tile grounds. Numbered rather than named by hue, so a hub
+     can re-theme them without the token lying about its value. */
+  --c-tint-1:     #e4f5ec;
+  --c-tint-2:     #fdf3e0;
+  --c-tint-3:     #e5eefb;
 
   --r-xl:  22px;
   --r-2xl: 28px;

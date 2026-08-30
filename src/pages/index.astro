@@ -8,7 +8,7 @@ const title = `${SITE.name} — ${SITE.tagline}`;
 const description = SITE.description;
 const canonical = '/';
 
-const TILE_TINT = ['tile--mint', 'tile--sand', 'tile--sky'] as const;
+const TILE_TINT = ['tile--tint-1', 'tile--tint-2', 'tile--tint-3'] as const;
 
 const groups = [
   { key: 'buy',       label: 'Buying a home',        desc: 'What you can carry, what it costs to get in, and whether buying beats renting at all.' },
@@ -166,7 +166,7 @@ const schema = [{
         </p>
       </div>
       <div class="tiles" style="margin-bottom:var(--s-6)">
-        <a class="tile tile--mint" href="/closing-costs">
+        <a class="tile tile--tint-1" href="/closing-costs">
           <span class="tile__icon">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg>
           </span>
@@ -178,7 +178,7 @@ const schema = [{
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </span>
         </a>
-        <a class="tile tile--sand" href="/affordability">
+        <a class="tile tile--tint-2" href="/affordability">
           <span class="tile__icon">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-5.5-7-11a7 7 0 1 1 14 0c0 5.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>
           </span>
@@ -190,7 +190,7 @@ const schema = [{
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </span>
         </a>
-        <a class="tile tile--sky" href="/methodology">
+        <a class="tile tile--tint-3" href="/methodology">
           <span class="tile__icon">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14M8 7h8M8 11h8M8 15h5"/></svg>
           </span>

@@ -100,7 +100,7 @@
    Verifiable properties of the product only. No ratings, no review counts,
    no testimonials — inventing social proof is how these sites lose trust. */
 .trust {
-  background: var(--c-mint);
+  background: var(--c-tint-1);
   border-bottom: 1px solid var(--c-line);
 }
 .trust__inner {
@@ -130,9 +130,9 @@
   transform: translateY(-3px); box-shadow: var(--shadow-lift);
   border-color: transparent; color: var(--c-ink);
 }
-.tile--mint { background: var(--c-mint); border-color: transparent; }
-.tile--sand { background: var(--c-sand); border-color: transparent; }
-.tile--sky  { background: var(--c-sky);  border-color: transparent; }
+.tile--tint-1 { background: var(--c-tint-1); border-color: transparent; }
+.tile--tint-2 { background: var(--c-tint-2); border-color: transparent; }
+.tile--tint-3  { background: var(--c-tint-3);  border-color: transparent; }
 
 .tile__icon {
   width: 46px; height: 46px; border-radius: 14px; flex: none;
@@ -189,7 +189,7 @@
 
 /* ---------- tool page hero band ---------- */
 .tool-band {
-  background: linear-gradient(180deg, var(--c-mint) 0%, rgba(228,245,236,0) 100%);
+  background: linear-gradient(180deg, var(--c-tint-1) 0%, rgba(228,245,236,0) 100%);
   border-bottom: 1px solid var(--c-line);
   margin-bottom: var(--s-6);
 }
@@ -201,7 +201,7 @@
 
 /* Index pages reuse the same band via a wrapper class. */
 .page-band {
-  background: linear-gradient(180deg, var(--c-mint) 0%, rgba(228,245,236,0) 100%);
+  background: linear-gradient(180deg, var(--c-tint-1) 0%, rgba(228,245,236,0) 100%);
   border-bottom: 1px solid var(--c-line);
   margin-bottom: var(--s-6);
   padding-bottom: var(--s-2);
