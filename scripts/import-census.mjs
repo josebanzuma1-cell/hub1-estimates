@@ -100,12 +100,15 @@ const effectiveRate = (taxes, value) =>
 // Census metro names look like "Austin-Round Rock-San Marcos, TX Metro Area".
 // Match on our city name appearing in the first segment plus the state code.
 function matchMetro(rows, metro) {
-  const wanted = metro.name.toLowerCase();
+  const wanted = metro.name;
   const st = metro.stateCode.toUpperCase();
   const candidates = rows.filter((r) => {
     const [placePart, statePart = ''] = r.name.split(',');
     if (!statePart.toUpperCase().includes(st)) return false;
-    return placePart.toLowerCase().split(/[-–]/).some((seg) => seg.trim() === wanted);
+    // Census place names use periods ("St. Louis") and slashes
+    // ("Louisville/Jefferson County"), so normalise before comparing segments.
+    const norm = (x) => x.toLowerCase().split('.').join('').trim();
+    return placePart.split(/[-–/]/).some((seg) => norm(seg) === norm(wanted));
   });
   // Prefer a Metro Area over a Micropolitan one when both match.
   return candidates.find((c) => /Metro Area/i.test(c.name)) ?? candidates[0] ?? null;
@@ -146,7 +149,7 @@ async function main() {
     metroUpdates.push({
       slug: row.slug,
       censusName: hit.name,
-      price: { was: row.medianPrice, now: hit.medianValue },
+      value: { was: row.medianValue, now: hit.medianValue },
       income: { was: row.medianIncome, now: hit.medianIncome },
       rent: { was: row.medianRent, now: hit.medianRent },
       tax: { was: row.propertyTaxPct, now: effectiveRate(hit.medianTaxes, hit.medianValue) },
@@ -159,8 +162,15 @@ async function main() {
     console.log('\nDry run. Re-run with --write to apply.');
     return;
   }
-  writeStates(stateUpdates);
-  writeMetros(metroUpdates);
+  const nStates = writeStates(stateUpdates);
+  const nMetros = writeMetros(metroUpdates);
+  // Provenance is claimed only for rows actually rewritten. Stamping it
+  // regardless would mark seeded data as verified — the one failure this
+  // whole system exists to prevent.
+  if (nMetros > 0) stampMetroProvenance();
+  else console.log("  metros.ts: nothing written, provenance NOT stamped");
+  if (nStates > 0) stampStateSource();
+  else console.log("  states.ts: nothing written, source NOT updated");
   console.log('\nWritten. Run `npm run data:report` to see remaining coverage.');
 }
 
@@ -185,7 +195,7 @@ function report(stateUpdates, metroUpdates, missingStates, missingMetros) {
   for (const u of metroUpdates.slice(0, 6)) {
     console.log(`  ${u.slug}`);
     console.log(`    census: ${u.censusName}`);
-    console.log(`    price  ${fmtMoney(u.price.was)} -> ${fmtMoney(u.price.now)}  ${pctDelta(u.price.was, u.price.now)}`);
+    console.log(`    value  ${fmtMoney(u.value.was)} -> ${fmtMoney(u.value.now)}  ${pctDelta(u.value.was, u.value.now)}`);
     console.log(`    income ${fmtMoney(u.income.was)} -> ${fmtMoney(u.income.now)}  ${pctDelta(u.income.was, u.income.now)}`);
     console.log(`    rent   ${fmtMoney(u.rent.was)} -> ${fmtMoney(u.rent.now)}  ${pctDelta(u.rent.was, u.rent.now)}`);
     console.log(`    tax    ${u.tax.was}% -> ${u.tax.now}%`);
@@ -203,55 +213,105 @@ const fmtMoney = (n) => (n ? '$' + Math.round(n).toLocaleString() : '—');
 
 function writeStates(updates) {
   const p = path.join(ROOT, 'src/data/states.ts');
-  let src = fs.readFileSync(p, 'utf8');
+  const L = fs.readFileSync(p, 'utf8').split('\n');
+  const byCode = new Map(updates.map((u) => [u.code, u]));
   let n = 0;
-  for (const u of updates) {
-    // Rows are single s(...) calls; propertyTaxPct is the 8th positional arg.
-    const re = new RegExp(`(s\('${u.code}',[^\n]*?,\s*)${escapeNum(u.was)}(,\s*[\d_]+,\s*'[^']*'\),)`);
-    if (re.test(src)) { src = src.replace(re, `$1${u.now}$2`); n++; }
+  for (let i = 0; i < L.length; i++) {
+    const m = L[i].match(/^\s*s\('([A-Z]{2})'/);
+    if (!m || !byCode.has(m[1])) continue;
+    const open = L[i].indexOf('(');
+    const close = L[i].lastIndexOf(')');
+    const args = splitArgs(L[i].slice(open + 1, close));
+    if (args.length < 10) continue;
+    args[7] = String(byCode.get(m[1]).now);   // propertyTaxPct
+    L[i] = L[i].slice(0, open + 1) + args.join(', ') + L[i].slice(close);
+    n++;
   }
-  // Property tax is now sourced even though the rest of the row is not, so the
-  // row-level flag stays false and the note records what WAS verified.
-  src = src.replace(
-    "  verified: false,\n  source: 'seeded estimate — unverified',",
-    `  verified: false,\n  source: 'transfer tax and fees seeded — unverified; propertyTaxPct from ${SOURCE}, checked ${TODAY}',`
-  );
-  fs.writeFileSync(p, src);
+  fs.writeFileSync(p, L.join('\n'));
   console.log(`\n  states.ts: ${n} property tax rates updated`);
+  return n;
 }
-
-const escapeNum = (v) => String(v).replace('.', '\.');
 
 function writeMetros(updates) {
   const p = path.join(ROOT, 'src/data/metros.ts');
-  let src = fs.readFileSync(p, 'utf8');
+  const L = fs.readFileSync(p, 'utf8').split('\n');
+  const bySlug = new Map(updates.map((u) => [u.slug, u]));
   let n = 0;
-  for (const u of updates) {
-    const [, city, st] = u.slug.match(/^(.*)-([a-z]{2})$/) ?? [];
-    if (!city) continue;
-    const nameRe = new RegExp(`m\('([^']+)',\s*'${st.toUpperCase()}',[^)]*\)`, 'g');
-    src = src.replace(nameRe, (full, cityName) => {
-      const slug = `${cityName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${st}`;
-      if (slug !== u.slug) return full;
-      n++;
-      return `m('${cityName}', '${st.toUpperCase()}', ${Math.round(u.price.now)}, ${Math.round(u.income.now)}, ${u.tax.now}, ` +
-             `${extractArg(full, 5)}, ${Math.round(u.rent.now)})`;
-    });
+  for (let i = 0; i < L.length; i++) {
+    const m = L[i].match(/^\s*m\('([^']+)',\s*'([A-Z]{2})'/);
+    if (!m) continue;
+    const slug = `${m[1].toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${m[2].toLowerCase()}`;
+    const u = bySlug.get(slug);
+    if (!u) continue;
+    const open = L[i].indexOf('(');
+    const close = L[i].lastIndexOf(')');
+    const args = splitArgs(L[i].slice(open + 1, close));
+    if (args.length < 7) continue;
+    // m(name, state, medianValue, medianIncome, propertyTaxPct, insurance, rent)
+    args[2] = String(Math.round(u.value.now));
+    args[3] = String(Math.round(u.income.now));
+    args[4] = String(u.tax.now);
+    args[6] = String(Math.round(u.rent.now));
+    L[i] = L[i].slice(0, open + 1) + args.join(', ') + L[i].slice(close);
+    n++;
   }
-  src = src.replace(
-    "  verified: false,\n  source: 'seeded estimate — unverified',",
-    `  verified: {\n    checkedOn: '${TODAY}',\n    source: '${SOURCE}',\n    by: 'census-import',\n  },\n  source: '${SOURCE} — insurance still seeded',`
-  );
-  fs.writeFileSync(p, src);
+  fs.writeFileSync(p, L.join('\n'));
   console.log(`  metros.ts: ${n} rows updated`);
+  return n;
 }
 
-/** Pull the nth positional argument out of an m(...) call, so fields the
- *  importer does not own (insurance) survive the rewrite untouched. */
-function extractArg(call, index) {
-  const inner = call.slice(call.indexOf('(') + 1, call.lastIndexOf(')'));
-  const parts = inner.split(',').map((x) => x.trim());
-  return parts[index] ?? '0';
+/** Split a call's argument list on top-level commas only. */
+function splitArgs(inner) {
+  const out = [];
+  let depth = 0, quote = null, cur = '';
+  for (const ch of inner) {
+    if (quote) { cur += ch; if (ch === quote) quote = null; continue; }
+    if (ch === "'" || ch === '"') { quote = ch; cur += ch; continue; }
+    if (ch === '[' || ch === '(' || ch === '{') depth++;
+    if (ch === ']' || ch === ')' || ch === '}') depth--;
+    if (ch === ',' && depth === 0) { out.push(cur.trim()); cur = ''; continue; }
+    cur += ch;
+  }
+  if (cur.trim()) out.push(cur.trim());
+  return out;
+}
+
+/** Replace the two seeded-provenance lines in a data file's row helper.
+ *  Line-based on purpose: git rewrites these files with CRLF on Windows, and
+ *  a string replace containing \n silently matches nothing. */
+function stampProvenance(relPath, replacement) {
+  const p = path.join(ROOT, relPath);
+  const raw = fs.readFileSync(p, 'utf8');
+  const eol = raw.includes('\r\n') ? '\r\n' : '\n';
+  const L = raw.split(/\r?\n/);
+  const i = L.findIndex((l) => l.trim() === 'verified: false,');
+  if (i < 0 || !L[i + 1] || !L[i + 1].includes('seeded estimate')) {
+    console.log(`  ${relPath}: provenance lines not found, NOT stamped`);
+    return false;
+  }
+  L.splice(i, 2, ...replacement);
+  fs.writeFileSync(p, L.join(eol));
+  return true;
+}
+
+function stampMetroProvenance() {
+  return stampProvenance('src/data/metros.ts', [
+    '  verified: {',
+    `    checkedOn: '${TODAY}',`,
+    `    source: '${SOURCE}',`,
+    "    by: 'census-import',",
+    '  },',
+    `  source: '${SOURCE} — insurance still seeded',`,
+  ]);
+}
+
+function stampStateSource() {
+  // States keep verified:false — only propertyTaxPct came from Census; transfer
+  // taxes, recording fees and attorney status are still unsourced.
+  return stampProvenance('src/data/states.ts', [
+    '  verified: false,',
+    `  source: 'transfer tax, fees and insurance seeded — unverified; propertyTaxPct from ${SOURCE}, checked ${TODAY}',`,
+  ]);
 }
 
 main().catch((e) => { console.error('\n' + e.message); process.exit(1); });

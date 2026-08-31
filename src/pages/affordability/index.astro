@@ -6,7 +6,7 @@ import { METROS } from '@data/metros';
 const title = `Home Affordability by City | ${SITE.name}`;
 const description = 'Price-to-income and price-to-rent ratios, local property tax rates and insurance for major US metros.';
 const canonical = '/affordability';
-const sorted = [...METROS].sort((a, b) => a.medianPrice / a.medianIncome - b.medianPrice / b.medianIncome);
+const sorted = [...METROS].sort((a, b) => a.medianValue / a.medianIncome - b.medianValue / b.medianIncome);
 ---
 <BaseLayout {title} {description} {canonical}>
   <div class="page-band">
@@ -17,7 +17,7 @@ const sorted = [...METROS].sort((a, b) => a.medianPrice / a.medianIncome - b.med
       <div class="tool-hero">
       <h1>Affordability by city</h1>
       <p>
-        Ranked by price-to-income ratio — median home price divided by median
+        Ranked by value-to-income ratio — median home value divided by median
         household income. It is the cleanest single measure of how stretched a
         market is, and it varies far more than mortgage rates do.
       </p>
@@ -35,10 +35,10 @@ const sorted = [...METROS].sort((a, b) => a.medianPrice / a.medianIncome - b.med
             {sorted.map((m) => (
               <tr>
                 <td><a href={`/affordability/${m.slug}`}>{m.name}, {m.stateCode}</a></td>
-                <td>${m.medianPrice.toLocaleString()}</td>
+                <td>${m.medianValue.toLocaleString()}</td>
                 <td>${m.medianIncome.toLocaleString()}</td>
-                <td>{(m.medianPrice / m.medianIncome).toFixed(1)}x</td>
-                <td>{(m.medianPrice / (m.medianRent * 12)).toFixed(1)}x</td>
+                <td>{(m.medianValue / m.medianIncome).toFixed(1)}x</td>
+                <td>{(m.medianValue / (m.medianRent * 12)).toFixed(1)}x</td>
                 <td>{m.propertyTaxPct}%</td>
               </tr>
             ))}

@@ -18,18 +18,18 @@ const canonical = `/affordability/${metro.slug}`;
 const title = `How Much House Can You Afford in ${metro.name}? | ${SITE.name}`;
 const description =
   `Home affordability for ${metro.name}, using the local ${metro.propertyTaxPct}% ` +
-  `property tax rate and a median price of $${metro.medianPrice.toLocaleString()}.`;
+  `property tax rate and a median home value of ${metro.medianValue.toLocaleString()}.`;
 
 // Price-to-income is the comparison that actually separates metros.
-const ptiRatio = metro.medianPrice / metro.medianIncome;
-const priceToRent = metro.medianPrice / (metro.medianRent * 12);
+const ptiRatio = metro.medianValue / metro.medianIncome;
+const priceToRent = metro.medianValue / (metro.medianRent * 12);
 const national = 4.1;
 const stretched = ptiRatio > 5;
 const affordable = ptiRatio < 3.5;
 
 const peers = METROS
   .filter((m) => m.slug !== metro.slug)
-  .map((m) => ({ m, d: Math.abs(m.medianPrice / m.medianIncome - ptiRatio) }))
+  .map((m) => ({ m, d: Math.abs(m.medianValue / m.medianIncome - ptiRatio) }))
   .sort((a, b) => a.d - b.d)
   .slice(0, 6)
   .map((x) => x.m);
@@ -64,16 +64,24 @@ const schema = [{
       <div class="table-wrap">
         <table class="data">
           <tbody>
-            <tr><td>Median home price</td><td>${metro.medianPrice.toLocaleString()}</td></tr>
+            <tr><td>Median home value</td><td>${metro.medianValue.toLocaleString()}</td></tr>
             <tr><td>Median household income</td><td>${metro.medianIncome.toLocaleString()}</td></tr>
             <tr><td>Price-to-income ratio</td><td>{ptiRatio.toFixed(1)}x</td></tr>
-            <tr><td>Median rent</td><td>${metro.medianRent.toLocaleString()} / month</td></tr>
+            <tr><td>Median gross rent</td><td>${metro.medianRent.toLocaleString()} / month</td></tr>
             <tr><td>Price-to-rent ratio</td><td>{priceToRent.toFixed(1)}x</td></tr>
             <tr><td>Effective property tax</td><td>{metro.propertyTaxPct}% of value per year</td></tr>
             <tr><td>Typical home insurance</td><td>${metro.insuranceAnnual.toLocaleString()} per year</td></tr>
           </tbody>
         </table>
       </div>
+      <p class="note" style="margin-top:var(--s-4)">
+        <strong class="note__title">What these figures measure</strong>
+        Home value is what owners estimate their property is worth across all
+        owner-occupied housing, from Census ACS table B25077 — not the median
+        sale price, which runs higher because it reflects only what actually
+        changed hands. Rent is median gross rent across all unit sizes with
+        utilities included, not a two-bedroom asking rent.
+      </p>
     </section>
 
     <section class="prose" style="margin-top:var(--s-7)">
@@ -91,7 +99,7 @@ const schema = [{
       </p>
       <p>
         The price-to-rent ratio of {priceToRent.toFixed(1)} is the other half of the
-        picture. It is the median price divided by a year of median rent, and it is
+        picture. It is the median value divided by a year of median gross rent, and it is
         the cleanest single indicator of whether buying or renting is the better
         financial move in a given market.
         {priceToRent > 20
@@ -106,9 +114,9 @@ const schema = [{
       <h2>Property tax in {metro.name}</h2>
       <p>
         The effective rate here is {metro.propertyTaxPct}% of market value per year —
-        about ${Math.round(metro.medianPrice * (metro.propertyTaxPct / 100)).toLocaleString()}
+        about ${Math.round(metro.medianValue * (metro.propertyTaxPct / 100)).toLocaleString()}
         annually on the median home, or
-        ${Math.round((metro.medianPrice * (metro.propertyTaxPct / 100)) / 12).toLocaleString()}
+        ${Math.round((metro.medianValue * (metro.propertyTaxPct / 100)) / 12).toLocaleString()}
         a month added to the payment before insurance.
         {metro.propertyTaxPct > 1.5
           ? ' That is a high rate by national standards, and it does real damage to purchasing power — it is worth roughly a full point of mortgage rate.'
@@ -139,7 +147,7 @@ const schema = [{
           <p>
             {state.transferTaxPct === null
               ? `${state.name} charges no state transfer tax, so the government share of your closing costs is limited to recording fees of around $${state.recordingFee}.`
-              : `${state.name} charges a ${state.transferTaxPct}% transfer tax, ${state.transferTaxPaidBy === 'buyer' ? 'customarily paid by the buyer' : state.transferTaxPaidBy === 'negotiable' ? 'customarily split between the parties' : 'customarily paid by the seller'}. On the ${metro.name} median price that is about $${Math.round(metro.medianPrice * (state.transferTaxPct / 100)).toLocaleString()}.`}
+              : `${state.name} charges a ${state.transferTaxPct}% transfer tax, ${state.transferTaxPaidBy === 'buyer' ? 'customarily paid by the buyer' : state.transferTaxPaidBy === 'negotiable' ? 'customarily split between the parties' : 'customarily paid by the seller'}. On the ${metro.name} median home value that is about $${Math.round(metro.medianValue * (state.transferTaxPct / 100)).toLocaleString()}.`}
             {' '}See the full breakdown for
             <a href={`/closing-costs/${state.slug}`}> {state.name} closing costs</a>.
           </p>
@@ -157,7 +165,7 @@ const schema = [{
           <a class="card" href={`/affordability/${p.slug}`}>
             <span class="card__title">{p.name}, {p.stateCode}</span>
             <span class="card__desc">
-              {(p.medianPrice / p.medianIncome).toFixed(1)}x income · median ${p.medianPrice.toLocaleString()}
+              {(p.medianValue / p.medianIncome).toFixed(1)}x income · median ${p.medianValue.toLocaleString()}
             </span>
           </a>
         ))}

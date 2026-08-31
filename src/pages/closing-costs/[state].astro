@@ -51,7 +51,7 @@ const schema = [{
       { href: '/closing-costs', label: 'Closing costs by state' },
       { label: state.name },
     ]}
-    defaultPrice={metros[0]?.medianPrice ?? 400000}
+    defaultPrice={metros[0]?.medianValue ?? 400000}
   >
     <section style="margin-top:var(--s-7)">
       <div class="section-head"><h2>{state.name} at a glance</h2></div>
@@ -158,7 +158,7 @@ const schema = [{
             <a class="card" href={`/affordability/${m.slug}`}>
               <span class="card__title">{m.name}</span>
               <span class="card__desc">
-                Median ${m.medianPrice.toLocaleString()} · property tax {m.propertyTaxPct}%
+                Median ${m.medianValue.toLocaleString()} · property tax {m.propertyTaxPct}%
               </span>
             </a>
           ))}

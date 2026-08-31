@@ -56,14 +56,17 @@ export interface MetroData {
   slug: string;
   name: string;
   stateCode: string;
-  /** median sale price */
-  medianPrice: number;
+  /** Census median home VALUE (B25077) — what owners estimate their homes are
+   *  worth across all owner-occupied stock. This is NOT the median sale price,
+   *  which runs higher because it reflects only what actually transacted. */
+  medianValue: number;
   /** median household income, used for the affordability ratio */
   medianIncome: number;
   /** local effective property tax rate, % of value per year */
   propertyTaxPct: number;
   insuranceAnnual: number;
-  /** median monthly rent, 2-bed — powers the rent-vs-buy cross-link */
+  /** Census median GROSS rent (B25064) — all unit sizes, utilities included.
+   *  Not a 2-bed asking rent, which runs higher. */
   medianRent: number;
   verified: Verified;
   source: string;
