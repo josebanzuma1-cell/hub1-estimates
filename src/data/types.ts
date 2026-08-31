@@ -11,6 +11,25 @@
    thing a visitor makes a real financial decision on. Seeded values
    are a scaffold for the page template, not a data set. */
 
+
+/** Evidence that a value was actually checked, rather than merely believed.
+ *
+ *  A bare `verified: true` rots: in eighteen months nobody can tell whether it
+ *  means "checked against the IRS" or "looked about right". Recording the
+ *  source and the date also lets the build gate fail on STALE data, which
+ *  matters because most of these figures are re-issued annually. */
+export interface Provenance {
+  /** ISO date the value was last checked */
+  checkedOn: string;
+  /** specific enough to re-check — a table number, not "the Census website" */
+  source: string;
+  /** who signed it off */
+  by: string;
+}
+
+/** `false` until checked; a Provenance record once it has been. */
+export type Verified = Provenance | false;
+
 export interface StateData {
   code: string;
   name: string;
@@ -29,7 +48,7 @@ export interface StateData {
   propertyTaxPct: number;
   /** average annual homeowners premium */
   insuranceAnnual: number;
-  verified: boolean;
+  verified: Verified;
   source: string;
 }
 
@@ -46,7 +65,7 @@ export interface MetroData {
   insuranceAnnual: number;
   /** median monthly rent, 2-bed — powers the rent-vs-buy cross-link */
   medianRent: number;
-  verified: boolean;
+  verified: Verified;
   source: string;
 }
 

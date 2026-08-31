@@ -52,3 +52,79 @@ Three separate reasons, all of which have bitten publishers in this niche:
 above and run `node scripts/import-metros.mjs <file.csv>`, which writes
 `metros.generated.ts` with provenance intact. Hand-entry across 400 rows will
 introduce errors faster than it produces pages.
+
+---
+
+# Verification workflow
+
+Not all 93 rows are equally hard. They fall into tiers by source type, and the
+tiers differ by orders of magnitude in effort.
+
+## Tier A — automated, one API
+
+`propertyTaxPct` (states and metros), `medianPrice`, `medianIncome` and
+`medianRent` all come from Census ACS 5-year tables:
+
+| Field | Table |
+|---|---|
+| Median home value | `B25077` |
+| Median household income | `B19013` |
+| Median gross rent | `B25064` |
+| Median real estate taxes | `B25103` |
+
+The effective property tax rate is computed as `B25103 ÷ B25077` rather than
+copied from a secondary source, so the two can never disagree.
+
+```bash
+npm run data:census          # dry run — prints a before/after diff
+npm run data:census:write    # applies it
+```
+
+Needs a free key from https://api.census.gov/data/key_signup.html in a
+gitignored `.env` as `CENSUS_API_KEY=...`. The importer reads it from the
+environment and never writes it into source.
+
+Re-run when a new ACS vintage publishes, roughly each December.
+
+## Tier B — one document, few numbers
+
+Nothing in this hub. In the tax hubs this covers IRS and SSA figures.
+
+## Tier C — 51 separate sources
+
+`transferTaxPct`, `transferTaxPaidBy`, `recordingFee`, `attorneyState`. No
+central machine-readable source exists.
+
+Do **not** visit 51 revenue departments. Populate from a reputable consolidated
+table, record *that* as the source, then spot-check 8–10 states against their
+actual DOR pages. If the sample matches, the table is sound. If it does not,
+you have learned something important cheaply.
+
+## Tier D — should not be published as point values
+
+Some fields have no single correct value:
+
+- **`transferTaxPaidBy`** — convention, and it varies by county
+- **`recordingFee`** — varies *within* states
+- **Title premiums** (the formula in `closing-costs.ts`) — filed per state, some regulated
+- **`insuranceAnnual`** — NAIC publishes state averages with a lag; an average is not a quote
+
+For these, publish a range or drop the field. The "unverified estimate" notice
+mitigates; it does not make an unverifiable point value correct.
+
+## Provenance, not a boolean
+
+`verified` is `false`, or a record of what was actually checked:
+
+```ts
+verified: {
+  checkedOn: '2026-08-31',
+  source: 'Census ACS 2023 5-year (B25077_001E, …)',
+  by: 'census-import',
+}
+```
+
+A bare `true` rots — in eighteen months nobody can tell whether it meant
+"checked against the source" or "looked about right". The gate also fails rows
+verified more than 400 days ago, because most of these figures are re-issued
+annually and a two-year-old check is barely better than none.

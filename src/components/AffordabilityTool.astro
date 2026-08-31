@@ -104,7 +104,7 @@ const ins = metro ? metro.insuranceAnnual : (D.ins as number);
 
   {metro && (
     <div style="margin-top:var(--s-5)">
-      <DataNote source={metro.source} verified={metro.verified}
+      <DataNote source={metro.source} verified={Boolean(metro.verified)}
                 note={`Median price and income for ${metro.name}. Your own figures matter more than the median — change them above.`} />
     </div>
   )}

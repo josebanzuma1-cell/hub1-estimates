@@ -10,7 +10,9 @@
     "preview": "astro preview --port 3025",
     "astro": "astro",
     "data:check": "node scripts/check-data.mjs",
-    "data:report": "node scripts/check-data.mjs --report"
+    "data:report": "node scripts/check-data.mjs --report",
+    "data:census": "node scripts/import-census.mjs --year 2023",
+    "data:census:write": "node scripts/import-census.mjs --year 2023 --write"
   },
   "dependencies": {
     "astro": "^5.6.1",

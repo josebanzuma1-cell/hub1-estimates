@@ -97,7 +97,7 @@ const price = defaultPrice ?? (D.price as number);
       <DataNote
         source={state.source}
         updated={undefined}
-        verified={state.verified}
+        verified={Boolean(state.verified)}
         note={state.transferTaxNote}
       />
     </div>
