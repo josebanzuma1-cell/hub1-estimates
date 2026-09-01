@@ -128,3 +128,87 @@ A bare `true` rots — in eighteen months nobody can tell whether it meant
 "checked against the source" or "looked about right". The gate also fails rows
 verified more than 400 days ago, because most of these figures are re-issued
 annually and a two-year-old check is barely better than none.
+
+## Assessment of the four unverified fields (2026-09-01)
+
+The 51 state rows carry four unverified fields. They are **not** one job — they
+differ in whether a verified value can exist at all. Treating them as a single
+"verify 51 rows" task is why this column has sat unfinished.
+
+### 1. `transferTaxPct` — genuinely verifiable. Do this one.
+
+Real statutes, one per state, changing rarely. This is also the largest of the
+four in dollar terms, so it is the one worth the grind.
+
+A six-state spot check against the statutes found **two errors in six**:
+
+| State | Ours | Statute | |
+|---|---|---|---|
+| Florida | 0.70% | $0.70 per $100 = 0.70% | match |
+| Maine | 0.44% | $2.20 per $500 = 0.44% | match |
+| South Carolina | 0.37% | $1.85 per $500 combined | match |
+| Connecticut | 1.00% | 0.75–1.25% by tier + municipal | match |
+| **North Carolina** | **0.20%** | **$2.00 per $2,000 = 0.10%** | **out by 2x** |
+| **Vermont** | **1.25%** | **0.5% to $100k, then 1.25%** | **top tier applied flat** |
+
+Two-thirds accuracy is what "seeded plausibly" looks like. Verifying this field
+means 51 statutes; the Lincoln Institute's *Significant Features of the Property
+Tax* database and NCSL both track it, but the entries seen were 2018–2020
+vintage, so they are a starting point and not an answer.
+
+**Note the shape problem too.** Several states are tiered (VT, CT) or add
+substantial local charges (CA, NY, MD). A single percentage cannot express
+those, and the row note is currently doing that work in prose. Consider the
+same treatment `minCover` got in hub 4: a structured type that can say "tiered"
+or "plus local" rather than a number that silently picks one tier.
+
+### 2. `insuranceAnnual` — verifiable in principle, not usefully in practice.
+
+The authoritative source is the NAIC *Homeowners Insurance Report*. The most
+recent release carries **2022 data**, and it sits behind the NAIC's document
+portal rather than as a direct PDF.
+
+Homeowners premiums have risen steeply since 2022 — double digits in several
+years and far more in catastrophe-exposed states. Stamping a 2022 figure
+"verified" would make it **less** accurate than the seeded estimate in some
+states while making it look more authoritative. That is the worst of both.
+
+**Recommendation:** leave it seeded and clearly unverified until a current
+source exists, or drop the field and let the affordability tool take insurance
+as a user input with a stated national default.
+
+### 3. `recordingFee` — the value does not exist at state level.
+
+Recording fees are set by the **county** register of deeds almost everywhere,
+and vary by document page count. A single state-wide number is not a fact that
+can be checked, so no amount of research will verify it.
+
+**Recommendation:** this is Tier D by this project's own taxonomy — a thing that
+should not be a point value. Either express it as a range with the county
+variation stated, or remove it and fold a national typical figure into the
+closing-cost total with a note.
+
+### 4. `attorneyState` — not a bright-line category.
+
+Whether a state "requires an attorney at closing" is a mix of
+unauthorized-practice-of-law opinions, bar rules, title-industry practice and
+local custom. The American Bar Association's own summary says only "roughly a
+dozen states". The current data has 14; commonly cited lists range from 12 to
+22 depending on what counts.
+
+**Recommendation:** reframe from a boolean to what can actually be sourced —
+for example "attorney customarily conducts closing" with the basis named — or
+drop it. A false negative here tells a buyer they do not need a lawyer.
+
+### Summary
+
+| Field | Verifiable? | Recommendation |
+|---|---|---|
+| `transferTaxPct` | Yes | Verify — 51 statutes. Consider a structured type for tiers and local add-ons. |
+| `insuranceAnnual` | Only to 2022 | Leave unverified, or make it a user input |
+| `recordingFee` | No — county level | Restructure or remove |
+| `attorneyState` | Not cleanly | Reframe or remove |
+
+Only one of the four is a research problem. The other three are schema
+problems, and hub 4 already demonstrated the fix: when a schema cannot express
+the truth, it asserts something false instead.
