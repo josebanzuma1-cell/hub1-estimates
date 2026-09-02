@@ -144,3 +144,19 @@ site loses the trust the strip is there to build.
    truncating it and fusing the remainder into the next line. It corrupted this
    file's heading twice. Use `node -e` with explicit string ops for anything
    containing pipes.
+
+15. **A rate that varies by price is a schedule, not a number.** Hub 1 stored
+    state transfer taxes as a single percentage. Four of the five errors found
+    when verifying them existed only because of that: Vermont's top tier was
+    applied from the first dollar, Washington was carrying its second band,
+    and DC and Washington are *cliffs* — the band's rate applies to the whole
+    price, so crossing a threshold raises the rate on every dollar rather than
+    just the excess. Before storing a rate, ask whether it is one number at
+    every price. If it is not, store the schedule and compute.
+
+16. **Check the generated file, not just the generator.** The script that
+    rewrote `states.ts` emitted `/s+/g` where `/\s+/g` was intended — a lost
+    backslash — so every slug had its `s` characters replaced with hyphens.
+    `alaska` became `ala-ka`. The build still passed; only the data gate's
+    report made it visible. Escaping survives fewer layers than you expect,
+    and a generator that produces valid syntax can still produce wrong data.
