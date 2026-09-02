@@ -30,15 +30,69 @@ export interface Provenance {
 /** `false` until checked; a Provenance record once it has been. */
 export type Verified = Provenance | false;
 
+/** One band of a transfer tax schedule. */
+export interface TransferTier {
+  /** upper bound of the band, in dollars of price; null = no upper bound */
+  upTo: number | null;
+  /** percent of price */
+  rate: number;
+}
+
+/** A state's real estate transfer tax.
+
+    Stored as a schedule rather than a single percentage, because several
+    states are not a single percentage and flattening them produced real
+    errors: Vermont was carrying its top tier as if it applied from the first
+    dollar, and Washington was carrying its second band, which overstates the
+    tax on every home below $525,000. */
+export interface TransferTax {
+  /** null where the state imposes no transfer or deed tax at all */
+  tiers: readonly TransferTier[] | null;
+  /** How the bands work. 'marginal' taxes each band at its own rate, like an
+   *  income tax. 'cliff' applies the band's rate to the WHOLE price — which
+   *  is what Washington and DC actually do, and produces a jump of thousands
+   *  of dollars at the threshold rather than a gentle slope. */
+  tierMode: 'marginal' | 'cliff';
+  /** Who customarily pays. This is closing custom, not statute, in most
+   *  states; 'split' means the statute itself divides it. */
+  paidBy: 'buyer' | 'seller' | 'split' | 'negotiable' | 'varies';
+  /** True where counties or cities commonly levy their own on top, so the
+   *  figure here is a floor rather than the amount actually due. */
+  localAddOn: boolean;
+  note: string;
+  verified: Verified;
+}
+
+/** Transfer tax due on a price, honouring the state's band structure. */
+export function transferTaxOn(price: number, tt: TransferTax): number {
+  if (!tt.tiers || price <= 0) return 0;
+  if (tt.tierMode === 'cliff') {
+    const band = tt.tiers.find((t) => t.upTo === null || price <= t.upTo) ?? tt.tiers[tt.tiers.length - 1];
+    return price * (band.rate / 100);
+  }
+  let due = 0;
+  let from = 0;
+  for (const t of tt.tiers) {
+    const ceiling = t.upTo ?? Infinity;
+    if (price <= from) break;
+    due += (Math.min(price, ceiling) - from) * (t.rate / 100);
+    from = ceiling;
+  }
+  return due;
+}
+
+/** Effective rate as a percentage of price — what the old single number was
+ *  trying to be, but computed from the schedule so it cannot disagree. */
+export function effectiveTransferRate(price: number, tt: TransferTax): number {
+  if (!tt.tiers || price <= 0) return 0;
+  return (transferTaxOn(price, tt) / price) * 100;
+}
+
 export interface StateData {
   code: string;
   name: string;
   slug: string;
-  /** state-level real estate transfer tax as % of price; null = none imposed */
-  transferTaxPct: number | null;
-  /** counties/cities frequently add their own — noted per state */
-  transferTaxNote: string;
-  transferTaxPaidBy: 'buyer' | 'seller' | 'negotiable' | 'varies';
+  transferTax: TransferTax;
   /** typical deed + mortgage recording charge, flat dollars */
   recordingFee: number;
   /** states where an attorney is customarily required at closing */

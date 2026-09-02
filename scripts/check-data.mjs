@@ -60,6 +60,35 @@ for (const [name, rows] of sets) {
   }
 }
 
+/* Transfer tax carries its own provenance, separate from the row, because it
+   was verified on its own and the other columns were not. One flag could only
+   overstate one or hide the other. */
+const ttOk = STATES.filter((r) => r.transferTax.verified);
+const ttNone = STATES.filter((r) => r.transferTax.tiers === null);
+console.log(`  transfer tax: ${ttOk.length}/${STATES.length} verified (${ttNone.length} states levy none)`);
+if (report && ttOk.length < STATES.length) {
+  console.log(`    unverified: ${STATES.filter((r) => !r.transferTax.verified).map((r) => r.code).join(', ')}`);
+}
+for (const r of STATES) {
+  const t = r.transferTax;
+  if (!['marginal', 'cliff'].includes(t.tierMode)) problems.push(`${r.code}: unknown tierMode "${t.tierMode}"`);
+  if (t.tiers === null) continue;
+  if (!t.tiers.length) { problems.push(`${r.code}: transfer tax has an empty schedule`); continue; }
+  if (t.tiers[t.tiers.length - 1].upTo !== null) problems.push(`${r.code}: top transfer tax band must be open-ended`);
+  for (let k = 1; k < t.tiers.length; k++) {
+    const prev = t.tiers[k - 1].upTo;
+    const cur = t.tiers[k].upTo;
+    if (prev === null || (cur !== null && cur <= prev)) problems.push(`${r.code}: transfer tax bands out of order`);
+  }
+  for (const b of t.tiers) {
+    if (!(b.rate >= 0 && b.rate <= 10)) problems.push(`${r.code}: implausible transfer tax rate ${b.rate}`);
+  }
+  const v = t.verified;
+  if (v && typeof v === 'object' && (!v.checkedOn || !v.source || !v.by)) {
+    problems.push(`${r.code}: transfer tax provenance is incomplete`);
+  }
+}
+
 if (problems.length) {
   console.error('\nData problems:');
   for (const p of problems) console.error(`  ${p}`);

@@ -5,6 +5,7 @@ import RelatedTools from '@kit/components/RelatedTools.astro';
 import { SITE, toolsExcept } from '../../lib/site';
 import { METROS } from '@data/metros';
 import { stateByCode } from '@data/states';
+import { effectiveTransferRate } from '@data/types';
 import type { MetroData } from '@data/types';
 
 export function getStaticPaths() {
@@ -145,9 +146,9 @@ const schema = [{
         <>
           <h2>Closing costs in {state.name}</h2>
           <p>
-            {state.transferTaxPct === null
+            {state.transferTax.tiers === null
               ? `${state.name} charges no state transfer tax, so the government share of your closing costs is limited to recording fees of around $${state.recordingFee}.`
-              : `${state.name} charges a ${state.transferTaxPct}% transfer tax, ${state.transferTaxPaidBy === 'buyer' ? 'customarily paid by the buyer' : state.transferTaxPaidBy === 'negotiable' ? 'customarily split between the parties' : 'customarily paid by the seller'}. On the ${metro.name} median home value that is about $${Math.round(metro.medianValue * (state.transferTaxPct / 100)).toLocaleString()}.`}
+              : `${state.name} charges a ${effectiveTransferRate(400_000, state.transferTax).toFixed(2)}% transfer tax, ${state.transferTaxPaidBy === 'buyer' ? 'customarily paid by the buyer' : state.transferTaxPaidBy === 'negotiable' ? 'customarily split between the parties' : 'customarily paid by the seller'}. On the ${metro.name} median home value that is about $${Math.round(metro.medianValue * (state.transferTaxPct / 100)).toLocaleString()}.`}
             {' '}See the full breakdown for
             <a href={`/closing-costs/${state.slug}`}> {state.name} closing costs</a>.
           </p>

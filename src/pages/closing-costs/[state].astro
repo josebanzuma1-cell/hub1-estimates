@@ -4,6 +4,7 @@ import ClosingCostTool from '../../components/ClosingCostTool.astro';
 import RelatedTools from '@kit/components/RelatedTools.astro';
 import { SITE, toolsExcept } from '../../lib/site';
 import { STATES } from '@data/states';
+import { transferTaxOn, effectiveTransferRate } from '@data/types';
 import { metrosByState } from '@data/metros';
 import type { StateData } from '@data/types';
 
@@ -14,15 +15,19 @@ export function getStaticPaths() {
 interface Props { state: StateData }
 const { state } = Astro.props;
 const canonical = `/closing-costs/${state.slug}`;
-const noTransferTax = state.transferTaxPct === null;
-const buyerPays = state.transferTaxPaidBy === 'buyer';
-const split = state.transferTaxPaidBy === 'negotiable';
-const highValue = (state.transferTaxPct ?? 0) >= 1;
+const REF = 400_000;
+const noTransferTax = state.transferTax.tiers === null;
+const refTax = transferTaxOn(REF, state.transferTax);
+const refRate = effectiveTransferRate(REF, state.transferTax);
+const tiered = (state.transferTax.tiers?.length ?? 0) > 1;
+const buyerPays = state.transferTax.paidBy === 'buyer';
+const split = state.transferTax.paidBy === 'negotiable' || state.transferTax.paidBy === 'split';
+const highValue = refRate >= 1;
 
 const title = `${state.name} Closing Costs Calculator — Transfer Tax & Fees | ${SITE.name}`;
 const description = noTransferTax
   ? `Estimate buyer closing costs in ${state.name}. The state charges no transfer tax — see what you do pay in title, lender, recording and prepaid items.`
-  : `Estimate buyer closing costs in ${state.name}, including the ${state.transferTaxPct}% transfer tax, title, lender and prepaid items.`;
+  : `Estimate buyer closing costs in ${state.name}, including the ${refRate.toFixed(2)}% transfer tax, title, lender and prepaid items.`;
 
 const metros = metrosByState(state.code);
 const related = toolsExcept('closing-cost-calculator').slice(0, 3).map((t) => ({
@@ -45,7 +50,7 @@ const schema = [{
     title={`Closing Costs in ${state.name}`}
     intro={noTransferTax
       ? `${state.name} charges no state transfer tax, which removes the single largest government line from a closing statement. Here is what you do pay.`
-      : `${state.name} charges a ${state.transferTaxPct}% transfer tax, ${buyerPays ? 'customarily paid by the buyer' : split ? 'customarily split between buyer and seller' : 'customarily paid by the seller'}. This estimate uses local rates for tax, recording and insurance.`}
+      : `${state.name} charges ${tiered ? 'a tiered' : `a ${refRate.toFixed(2)}%`} transfer tax, ${buyerPays ? 'customarily paid by the buyer' : split ? 'customarily split between buyer and seller' : 'customarily paid by the seller'}. This estimate uses local rates for tax, recording and insurance.`}
     breadcrumbs={[
       { href: '/', label: 'Home' },
       { href: '/closing-costs', label: 'Closing costs by state' },
@@ -58,8 +63,8 @@ const schema = [{
       <div class="table-wrap">
         <table class="data">
           <tbody>
-            <tr><td>State transfer tax</td><td>{noTransferTax ? 'None' : `${state.transferTaxPct}% of price`}</td></tr>
-            <tr><td>Customarily paid by</td><td style="text-transform:capitalize">{noTransferTax ? '—' : state.transferTaxPaidBy}</td></tr>
+              <tr><td>State transfer tax</td><td>{noTransferTax ? 'None' : (tiered ? `${refRate.toFixed(2)}% effective on a $400,000 sale` : `${refRate.toFixed(2)}% of price`)}</td></tr>
+            <tr><td>Customarily paid by</td><td style="text-transform:capitalize">{noTransferTax ? '—' : state.transferTax.paidBy}</td></tr>
             <tr><td>Typical recording fees</td><td>${state.recordingFee}</td></tr>
             <tr><td>Attorney required at closing</td><td>{state.attorneyState ? `Yes — about $${state.attorneyFee.toLocaleString()}` : 'No'}</td></tr>
             <tr><td>Average effective property tax</td><td>{state.propertyTaxPct}% of value per year</td></tr>
@@ -75,7 +80,7 @@ const schema = [{
         <>
           <p>
             {state.name} is one of a minority of states that imposes no real estate
-            transfer tax. {state.transferTaxNote} For a buyer this is worth real
+            transfer tax. {state.transferTax.note} For a buyer this is worth real
             money: on a $400,000 purchase, the equivalent charge would be $4,000 in
             Pennsylvania or $16,000 in Delaware.
           </p>
@@ -90,12 +95,12 @@ const schema = [{
       ) : (
         <>
           <p>
-            {state.name} charges {state.transferTaxPct}% of the purchase price when
-            a deed is recorded. {state.transferTaxNote}
+            {state.name} charges {tiered ? 'a tiered rate on' : `${refRate.toFixed(2)}% of`} the purchase price when
+            a deed is recorded. {state.transferTax.note}
           </p>
           <p>
             On a $400,000 purchase that is
-            ${Math.round(400000 * (state.transferTaxPct! / 100)).toLocaleString()} at
+            ${Math.round(refTax).toLocaleString()} at
             the state rate{split ? ', which is customarily split so each side pays about half' : buyerPays ? ', customarily paid by the buyer' : ', customarily paid by the seller'}.
             {buyerPays || split
               ? ' The calculator above includes your share.'

@@ -212,3 +212,71 @@ drop it. A false negative here tells a buyer they do not need a lawyer.
 Only one of the four is a research problem. The other three are schema
 problems, and hub 4 already demonstrated the fix: when a schema cannot express
 the truth, it asserts something false instead.
+
+## Transfer tax — pass 1 DONE, 17 of 51 verified (2026-09-02)
+
+Checked against the statute or the state revenue department. **Five of the
+seventeen were wrong, and four of the five were wrong because a single
+percentage cannot describe the tax.**
+
+| State | Was | Now | What was wrong |
+|---|---|---|---|
+| North Carolina | 0.20% | **0.10%** | Simply the wrong figure — the excise stamp is $2.00 per $2,000 |
+| Vermont | 1.25% | **0.5% / 1.25% marginal** | The top tier was applied from the first dollar |
+| DC | 1.10% | **1.10% / 1.45% cliff** | 1.45% applies to the WHOLE price at $400,000 and above |
+| Washington | 1.28% | **1.10–3.00% cliff** | 1.28% is the *second* band; below $525,000 it is 1.10% |
+| Nevada | 0.51% | **0.39%** | 0.51% is the Clark County rate, not the state rate |
+
+On a $400,000 sale those corrections move the buyer's number by real money:
+Washington drops from $5,120 to $4,400, Vermont from $5,000 to $4,250, North
+Carolina halves.
+
+### The schema was the actual fix
+
+`transferTaxPct: number | null` could not express any of the four structural
+errors. It is now a schedule:
+
+```ts
+interface TransferTax {
+  tiers: readonly { upTo: number | null; rate: number }[] | null;
+  tierMode: 'marginal' | 'cliff';
+  paidBy: 'buyer' | 'seller' | 'split' | 'negotiable' | 'varies';
+  localAddOn: boolean;
+  note: string;
+  verified: Verified;
+}
+```
+
+Two details worth keeping:
+
+- **`tierMode: 'cliff'`** is not a rounding nicety. Washington and DC apply the
+  band's rate to the *entire* price, so crossing the threshold raises the rate
+  on every dollar — a jump of thousands, not a gentle slope. A marginal model
+  would have understated both. There are tests for the jump.
+- **`paidBy: 'split'`** distinguishes a statutory division (Maine, New
+  Hampshire, Delaware and DC divide it by law) from `negotiable`, which is
+  merely custom. The calculator charges the buyer half in both cases but says
+  which is which, because one is negotiable and the other is not.
+
+`transferTax` carries its **own** provenance, separate from the row's, because
+it was verified on its own while recording fees, attorney status and insurance
+were not. A single flag could only have overstated one or hidden the other —
+the same split hub 4 arrived at.
+
+### Still to verify: 34 rows
+
+19 states with a tax still carry seeded figures: AL AR CO GA HI IA IL KY MI MN
+NE OH OK RI SD TN VA WI WV.
+
+The 15 states recorded as levying **no** transfer tax — AK AZ ID IN KS LA MS MO
+MT NM ND OR TX UT WY — are also still marked unverified. "There is no tax" is a
+claim like any other and nobody has checked it state by state. The list matches
+the commonly cited set, which is a reason to expect it is right, not evidence
+that it is.
+
+### What the pass changed about the pages
+
+The state table used to rank by headline rate. Tiered states have no headline
+rate, so it now ranks by what the tax actually costs on a $400,000 reference
+sale, and tiered states say "effective on a $400,000 sale" rather than quoting
+a number that applies at no price anyone pays.

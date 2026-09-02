@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { SITE } from '../../lib/site';
 import { STATES } from '@data/states';
+import { transferTaxOn, effectiveTransferRate } from '@data/types';
 
 const title = `Closing Costs by State — Transfer Tax & Fees | ${SITE.name}`;
 const description =
@@ -9,8 +10,11 @@ const description =
   '50 states and DC, with a calculator for each.';
 const canonical = '/closing-costs';
 
-const sorted = [...STATES].sort((a, b) => (b.transferTaxPct ?? 0) - (a.transferTaxPct ?? 0));
-const noTax = STATES.filter((s) => s.transferTaxPct === null);
+/* Ranked by what the tax actually costs on a reference sale rather than by a
+   headline rate, because tiered states have no single headline rate. */
+const REF = 400_000;
+const sorted = [...STATES].sort((a, b) => transferTaxOn(REF, b.transferTax) - transferTaxOn(REF, a.transferTax));
+const noTax = STATES.filter((s) => s.transferTax.tiers === null);
 ---
 <BaseLayout {title} {description} {canonical}>
   <div class="page-band">
@@ -44,9 +48,9 @@ const noTax = STATES.filter((s) => s.transferTaxPct === null);
             {sorted.map((s) => (
               <tr>
                 <td><a href={`/closing-costs/${s.slug}`}>{s.name}</a></td>
-                <td>{s.transferTaxPct === null ? 'None' : `${s.transferTaxPct}%`}</td>
-                <td style="text-transform:capitalize">{s.transferTaxPct === null ? '—' : s.transferTaxPaidBy}</td>
-                <td>{s.transferTaxPct === null ? '$0' : `$${Math.round(400000 * (s.transferTaxPct / 100)).toLocaleString()}`}</td>
+                <td>{s.transferTax.tiers === null ? 'None' : `${effectiveTransferRate(REF, s.transferTax).toFixed(2)}%`}</td>
+                <td style="text-transform:capitalize">{s.transferTax.tiers === null ? '—' : s.transferTax.paidBy}</td>
+                <td>{s.transferTax.tiers === null ? '$0' : `$${Math.round(transferTaxOn(REF, s.transferTax)).toLocaleString()}`}</td>
                 <td>{s.attorneyState ? 'Required' : '—'}</td>
               </tr>
             ))}

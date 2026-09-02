@@ -1,3 +1,4 @@
+import { transferTaxOn } from '@data/types';
 /* Tool 5 — Closing cost estimator.
    Broken into the four buckets a Loan Estimate actually uses, because the
    useful question is never "what's the total" — it's "which of these can I
@@ -76,12 +77,14 @@ export function makeCompute(state: StateData | null) {
       ...(state?.attorneyState ? [{ label: 'Closing attorney', amount: state.attorneyFee, shoppable: true, note: 'Customarily required in this state.' }] : []),
     ];
 
-    const buyerPaysTransfer = state
-      ? state.transferTaxPaidBy === 'buyer' || state.transferTaxPaidBy === 'negotiable'
-      : false;
-    const transferShare = state?.transferTaxPaidBy === 'negotiable' ? 0.5 : 1;
-    const transferTax = state?.transferTaxPct != null && buyerPaysTransfer
-      ? price * (state.transferTaxPct / 100) * transferShare
+    /* The buyer's share. 'split' is a statutory half — Maine, New Hampshire
+       and Delaware divide it by law — while 'negotiable' is custom, and shown
+       as a half because that is what usually happens. */
+    const paidBy = state?.transferTax.paidBy;
+    const buyerPaysTransfer = paidBy === 'buyer' || paidBy === 'split' || paidBy === 'negotiable';
+    const transferShare = paidBy === 'split' || paidBy === 'negotiable' ? 0.5 : 1;
+    const transferTax = state && buyerPaysTransfer
+      ? transferTaxOn(price, state.transferTax) * transferShare
       : 0;
 
     const gov: CostLine[] = [
@@ -90,9 +93,11 @@ export function makeCompute(state: StateData | null) {
         label: 'Transfer / deed tax',
         amount: transferTax,
         shoppable: false,
-        note: state?.transferTaxPaidBy === 'negotiable'
-          ? 'Customarily split — shown here as the buyer half. Always negotiable.'
-          : 'Customarily paid by the buyer in this state.',
+        note: paidBy === 'split'
+          ? 'Divided equally between buyer and seller by statute — the buyer half is shown.'
+          : paidBy === 'negotiable'
+            ? 'Customarily split — shown here as the buyer half. Always negotiable.'
+            : 'Customarily paid by the buyer in this state.',
       }] : []),
     ];
 
